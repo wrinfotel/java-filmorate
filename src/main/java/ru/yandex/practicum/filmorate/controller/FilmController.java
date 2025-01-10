@@ -34,34 +34,29 @@ public class FilmController {
         return film;
     }
 
-
     @PutMapping
     public Film update(@RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-
-            validateFilm(newFilm);
-
-            oldFilm.setName(newFilm.getName());
-
-            if (!newFilm.getDescription().isBlank()) {
-                oldFilm.setDescription(newFilm.getDescription());
-            }
-            if (newFilm.getReleaseDate() != null) {
-                oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            }
-
-            oldFilm.setDuration(newFilm.getDuration());
-
-
-            log.info("Film updated " + oldFilm.getId());
-            return oldFilm;
+        if (!films.containsKey(newFilm.getId())) {
+            log.error("Фильм с id = " + newFilm.getId() + " не найден");
+            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
         }
-        log.error("Фильм с id = " + newFilm.getId() + " не найден");
-        throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+
+        validateFilm(newFilm);
+
+        Film oldFilm = films.get(newFilm.getId());
+        oldFilm.setName(newFilm.getName());
+        if (!newFilm.getDescription().isBlank()) {
+            oldFilm.setDescription(newFilm.getDescription());
+        }
+        if (newFilm.getReleaseDate() != null) {
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+        }
+        oldFilm.setDuration(newFilm.getDuration());
+        log.info("Film updated " + oldFilm.getId());
+        return oldFilm;
     }
 
     private long getNextId() {

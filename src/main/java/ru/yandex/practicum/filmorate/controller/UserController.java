@@ -45,27 +45,28 @@ public class UserController {
         if (newUser.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.get(newUser.getId());
-            validateUser(newUser);
-            if (!newUser.getEmail().isBlank()) {
-                oldUser.setEmail(newUser.getEmail());
-            }
-            if (!newUser.getLogin().isBlank()) {
-                oldUser.setLogin(newUser.getLogin());
-            }
-            if (!newUser.getName().isBlank()) {
-                oldUser.setName(newUser.getName());
-            }
-
-            if (newUser.getBirthday() != null) {
-                oldUser.setBirthday(newUser.getBirthday());
-            }
-            log.info("Updated user with id " + oldUser.getId());
-            return oldUser;
+        if (!users.containsKey(newUser.getId())) {
+            log.error("Пользователь с id = " + newUser.getId() + " не найден");
+            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
         }
-        log.error("Пользователь с id = " + newUser.getId() + " не найден");
-        throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
+
+        validateUser(newUser);
+
+        User oldUser = users.get(newUser.getId());
+        if (!newUser.getEmail().isBlank()) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (!newUser.getLogin().isBlank()) {
+            oldUser.setLogin(newUser.getLogin());
+        }
+        if (!newUser.getName().isBlank()) {
+            oldUser.setName(newUser.getName());
+        }
+        if (newUser.getBirthday() != null) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
+        log.info("Updated user with id " + oldUser.getId());
+        return oldUser;
     }
 
     private long getNextId() {
