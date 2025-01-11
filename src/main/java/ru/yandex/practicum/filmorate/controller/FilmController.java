@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +27,11 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
-        validateFilm(film);
+    public Film create(@Valid @RequestBody Film film) {
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            log.warn("Ошибка валидации - Дата релиза должна быть позже или равна 28 декабря 1895");
+            throw new ValidationException("Дата релиза должна быть позже или равна 28 декабря 1895");
+        }
         film.setId(getNextId());
         films.put(film.getId(), film);
         log.info("New film added " + film.getId());
@@ -35,7 +39,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film newFilm) {
+    public Film update(@Valid @RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
@@ -44,7 +48,10 @@ public class FilmController {
             throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
         }
 
-        validateFilm(newFilm);
+        if (newFilm.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            log.warn("Ошибка валидации - Дата релиза должна быть позже или равна 28 декабря 1895");
+            throw new ValidationException("Дата релиза должна быть позже или равна 28 декабря 1895");
+        }
 
         Film oldFilm = films.get(newFilm.getId());
         oldFilm.setName(newFilm.getName());
@@ -66,24 +73,5 @@ public class FilmController {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
-    }
-
-    private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Ошибка валидации - Название фильма должно быть заполнено");
-            throw new ValidationException("Название фильма должно быть заполнено");
-        }
-        if (film.getDescription().length() > 200) {
-            log.warn("Ошибка валидации - Описание не должно превышать 200 символов");
-            throw new ValidationException("Описание не должно превышать 200 символов");
-        }
-        if (film.getDuration() <= 0) {
-            log.warn("Ошибка валидации - Продолжительность должна быть больше нуля");
-            throw new ValidationException("Продолжительность должна быть больше нуля");
-        }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Ошибка валидации - Дата релиза должна быть позже или равна 28 декабря 1895");
-            throw new ValidationException("Дата релиза должна быть позже или равна 28 декабря 1895");
-        }
     }
 }

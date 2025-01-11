@@ -3,7 +3,11 @@ package ru.yandex.practicum.filmorate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -11,11 +15,19 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
+@AutoConfigureMockMvc
 public class UsersControllerTests {
 
     @Autowired
     private UserController controller;
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @Test
     void shouldCreateUser() {
@@ -45,73 +57,89 @@ public class UsersControllerTests {
     }
 
     @Test
-    void shouldNotCreateUserWithoutEmail() {
-        User user = User.builder()
-                .name("Test")
-                .login("testLogin")
-                .birthday(LocalDate.parse("2011-05-12"))
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user),
-                "Имейл должен быть указан - тест провален");
+    void shouldNotCreateUserWithoutEmail() throws Exception {
+
+        String json = "{\"name\": \"Test\"," +
+                "\"login\": \"testLogin\"," +
+                " \"birthday\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateUserWithInvalidEmail() {
-        User user = User.builder()
-                .name("Test")
-                .email("testtest.ru")
-                .login("testLogin")
-                .birthday(LocalDate.parse("2011-05-12"))
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user),
-                "Имейл должен быть указан - тест провален");
+    void shouldNotCreateUserWithInvalidEmail() throws Exception {
+        String json = "{\"name\": \"Test\"," +
+                " \"email\": \"testtest.ru\"," +
+                "\"login\": \"testLogin\"," +
+                " \"birthday\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateUserWithoutLogin() {
-        User user = User.builder()
-                .name("Test")
-                .email("test@test.ru")
-                .birthday(LocalDate.parse("2011-05-12"))
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user),
-                "Логин должен быть указан - тест провален");
+    void shouldNotCreateUserWithoutLogin() throws Exception {
+        String json = "{\"name\": \"Test\"," +
+                " \"email\": \"testUWL@test.ru\"," +
+                " \"birthday\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateUserWithSpacesInLogin() {
-        User user = User.builder()
-                .name("Test")
-                .email("test@test.ru")
-                .login("tes tLo gin")
-                .birthday(LocalDate.parse("2011-05-12"))
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user),
-                "Логин не должен содержать пробелы - тест провален");
+    void shouldNotCreateUserWithSpacesInLogin() throws Exception {
+        String json = "{\"name\": \"Test\"," +
+                " \"email\": \"testWs@test.ru\"," +
+                " \"login\": \"tes tLog in\"," +
+                " \"birthday\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateUserBitrhdayInFuture() {
-        User user = User.builder()
-                .name("Test")
-                .email("test@test.ru")
-                .login("testLogin")
-                .birthday(LocalDate.parse("2025-05-12"))
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user),
-                "Дата рождения не может быть в будущем - тест провален");
+    void shouldNotCreateUserBitrhdayInFuture() throws Exception {
+        String json = "{\"name\": \"Test\"," +
+                " \"email\": \"testUWL@test.ru\"," +
+                " \"login\": \"testLogin\"," +
+                " \"birthday\": \"2025-05-12\"}";
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
     void shouldUpdateUser() {
         User user = User.builder()
                 .name("Test")
-                .email("test@test.ru")
+                .email("testUu@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
@@ -138,7 +166,7 @@ public class UsersControllerTests {
         User user = User.builder()
                 .id(10L)
                 .name("Test")
-                .email("test@test.ru")
+                .email("testNuu@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();

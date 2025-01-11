@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,9 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        validateUser(user);
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         boolean checkUser = users.values().stream().anyMatch(user1 -> user1.getEmail().equals(user.getEmail()));
         if (checkUser) {
             throw new ValidationException("Этот имейл уже используется");
@@ -50,8 +51,6 @@ public class UserController {
             throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
         }
 
-        validateUser(newUser);
-
         User oldUser = users.get(newUser.getId());
         if (!newUser.getEmail().isBlank()) {
             oldUser.setEmail(newUser.getEmail());
@@ -61,6 +60,8 @@ public class UserController {
         }
         if (!newUser.getName().isBlank()) {
             oldUser.setName(newUser.getName());
+        }  else {
+            oldUser.setName(newUser.getLogin());
         }
         if (newUser.getBirthday() != null) {
             oldUser.setBirthday(newUser.getBirthday());
@@ -76,27 +77,5 @@ public class UserController {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
-    }
-
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.warn("Ошибка валидации - Имейл должен быть указан");
-            throw new ValidationException("Имейл должен быть указан");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank()) {
-            log.warn("Ошибка валидации - Логин должен быть указан");
-            throw new ValidationException("Логин должен быть указан");
-        }
-        if (user.getLogin().contains(" ")) {
-            log.warn("Ошибка валидации - Логин не должен содержать пробелы");
-            throw new ValidationException("Логин не должен содержать пробелы");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("Ошибка валидации - Дата рождения не может быть в будущем");
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
     }
 }

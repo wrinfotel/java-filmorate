@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,6 +18,7 @@ public class User {
 
     @NotNull
     @NotBlank
+    @Pattern(regexp = "\\S+", message = "Поле не должно содержать пробелов")
     String login;
 
     String name;

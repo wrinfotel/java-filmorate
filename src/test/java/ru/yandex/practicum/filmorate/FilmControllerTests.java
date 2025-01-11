@@ -3,7 +3,11 @@ package ru.yandex.practicum.filmorate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -11,63 +15,81 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
+@AutoConfigureMockMvc
 public class FilmControllerTests {
 
     @Autowired
     private FilmController controller;
 
-    @Test
-    void shouldCreateFilm() {
-        Film film = Film.builder()
-                .name("TestFilm")
-                .description("test Description")
-                .releaseDate(LocalDate.parse("2011-05-12"))
-                .duration(100)
-                .build();
+    @Autowired
+    private MockMvc mockMvc;
 
-        Film createdFilm = controller.create(film);
-        Assertions.assertEquals(film, createdFilm);
+    @Test
+    void shouldCreateFilm() throws Exception {
+        String json = "{\"name\": \"TestFilm\"," +
+                "\"description\": \"test Description\"," +
+                " \"duration\": 100," +
+                "\"releaseDate\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+
     }
 
     @Test
-    void shouldNotCreateFilmWithoutName() {
-        Film film = Film.builder()
-                .description("test Description")
-                .releaseDate(LocalDate.parse("2011-05-12"))
-                .duration(100)
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(film),
-                "Название фильма должно быть заполнено - тест провален");
+    void shouldNotCreateFilmWithoutName() throws Exception {
+        String json = "{\"description\": \"test Description\", \"duration\": 100," +
+                "\"releaseDate\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateFilmWithLongDescription() {
-        Film film = Film.builder()
-                .name("TestFilm")
-                .description("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque feugiat felis accumsan" +
-                        " dui accumsan maximus. Aenean maximus ullamcorper turpis sed mollis. Curabitur quis " +
-                        "nulla iaculis, luctus turpisa.")
-                .releaseDate(LocalDate.parse("2011-05-12"))
-                .duration(100)
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(film),
-                "Описание не должно превышать 200 символов - тест провален");
+    void shouldNotCreateFilmWithLongDescription() throws Exception {
+        String json = "{\"name\": \"TestFilm\"," +
+                "\"description\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+                "Quisque feugiat felis accumsan dui accumsan maximus." +
+                " Aenean maximus ullamcorper turpis sed mollis. Curabitur quis nulla iaculis, luctus turpisa.\"," +
+                " \"duration\": 100," +
+                "\"releaseDate\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
-    void shouldNotCreateFilmWithZeroDuration() {
-        Film film = Film.builder()
-                .name("TestFilm")
-                .description("test Description")
-                .releaseDate(LocalDate.parse("2011-05-12"))
-                .duration(0)
-                .build();
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(film),
-                "Продолжительность должна быть больше нуля - тест провален");
+    void shouldNotCreateFilmWithZeroDuration() throws Exception {
+        String json = "{\"name\": \"TestFilm\"," +
+                "\"description\": \"test Description\"," +
+                " \"duration\": 0," +
+                "\"releaseDate\": \"2011-05-12\"}";
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        result -> assertInstanceOf(MethodArgumentNotValidException.class,
+                                result.getResolvedException()));
     }
 
     @Test
@@ -78,7 +100,7 @@ public class FilmControllerTests {
                 .releaseDate(LocalDate.parse("1895-12-27"))
                 .duration(100)
                 .build();
-        Assertions.assertThrows(ValidationException.class,
+        assertThrows(ValidationException.class,
                 () -> controller.create(film),
                 "Дата релиза должна быть позже или равна 28 декабря 1895 - тест провален");
     }
@@ -92,7 +114,7 @@ public class FilmControllerTests {
                 .releaseDate(LocalDate.parse("1900-12-27"))
                 .duration(100)
                 .build();
-        Assertions.assertThrows(NotFoundException.class,
+        assertThrows(NotFoundException.class,
                 () -> controller.update(film),
                 "Фильм не найден - тест провален");
     }
@@ -105,7 +127,7 @@ public class FilmControllerTests {
                 .releaseDate(LocalDate.parse("1900-12-27"))
                 .duration(100)
                 .build();
-        Assertions.assertThrows(ValidationException.class,
+        assertThrows(ValidationException.class,
                 () -> controller.update(film),
                 "Обновление без id - тест провален");
     }
