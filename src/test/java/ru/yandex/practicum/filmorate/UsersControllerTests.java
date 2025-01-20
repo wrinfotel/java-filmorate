@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -153,6 +154,8 @@ public class UsersControllerTests {
                 .name("TestUpdated")
                 .email("test@testupdate.ru")
                 .login("testLoginUpdate")
+                .friends(new HashSet<>())
+                .likedFilms(new HashSet<>())
                 .birthday(LocalDate.parse("2010-05-12"))
                 .build();
 

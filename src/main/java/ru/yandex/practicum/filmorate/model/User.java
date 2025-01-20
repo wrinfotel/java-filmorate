@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @Builder
@@ -25,4 +26,8 @@ public class User {
 
     @Past
     LocalDate birthday;
+
+    Set<Long> friends;
+
+    Set<Long> likedFilms;
 }

@@ -23,4 +23,14 @@ public class Film {
 
     @Positive
     int duration;
+
+    int likesCount;
+
+    public void addLike() {
+        this.likesCount++;
+    }
+
+    public void removeLike() {
+        this.likesCount--;
+    }
 }

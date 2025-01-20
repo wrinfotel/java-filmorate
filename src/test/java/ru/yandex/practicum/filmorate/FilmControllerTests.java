@@ -40,7 +40,7 @@ public class FilmControllerTests {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
     }
 
