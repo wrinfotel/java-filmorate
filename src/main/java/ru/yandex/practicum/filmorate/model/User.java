@@ -10,24 +10,24 @@ import java.util.Set;
 @Data
 @Builder
 public class User {
-    Long id;
+    private Long id;
 
     @NotNull
     @NotBlank
     @Email
-    String email;
+    private String email;
 
     @NotNull
     @NotBlank
     @Pattern(regexp = "\\S+", message = "Поле не должно содержать пробелов")
-    String login;
+    private String login;
 
-    String name;
+    private String name;
 
     @Past
-    LocalDate birthday;
+    private LocalDate birthday;
 
-    Set<Long> friends;
+    private Set<Long> friends;
 
-    Set<Long> likedFilms;
+    private Set<Long> likedFilms;
 }

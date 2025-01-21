@@ -13,18 +13,18 @@ public class Film {
 
     @NotNull
     @NotBlank
-    String name;
+    private String name;
 
     @Size(max = 200, message = "Описание не должно превышать 200 символов")
-    String description;
+    private String description;
 
     @Past
-    LocalDate releaseDate;
+    private LocalDate releaseDate;
 
     @Positive
-    int duration;
+    private int duration;
 
-    int likesCount;
+    private int likesCount;
 
     public void addLike() {
         this.likesCount++;
