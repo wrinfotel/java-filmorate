@@ -25,9 +25,11 @@ public class User {
     private String name;
 
     @Past
+    @NotNull
     private LocalDate birthday;
 
-    private Set<Long> friends;
+    private Set<User> friends;
 
-    private Set<Long> likedFilms;
+    private Set<Film> likedFilms;
+
 }

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -140,7 +141,7 @@ public class FilmControllerTests {
                 .releaseDate(LocalDate.parse("1900-12-27"))
                 .duration(100)
                 .build();
-        Film createdFilm = controller.create(film);
+        FilmDto createdFilm = controller.create(film);
 
         Film filmUpdate = Film.builder()
                 .id(createdFilm.getId())
@@ -150,7 +151,7 @@ public class FilmControllerTests {
                 .duration(100)
                 .build();
 
-        Film updateFilm = controller.update(filmUpdate);
+        FilmDto updateFilm = controller.update(filmUpdate);
         Assertions.assertEquals(filmUpdate, updateFilm);
     }
 }

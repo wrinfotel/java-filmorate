@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -39,7 +40,7 @@ public class UsersControllerTests {
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
 
-        User createdUser = controller.create(user);
+        UserDto createdUser = controller.create(user);
         Assertions.assertEquals(user, createdUser);
     }
 
@@ -145,7 +146,7 @@ public class UsersControllerTests {
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
 
-        User createdUser = controller.create(user);
+        UserDto createdUser = controller.create(user);
         Assertions.assertEquals(user, createdUser);
         Assertions.assertEquals(1, createdUser.getId());
 
@@ -159,7 +160,7 @@ public class UsersControllerTests {
                 .birthday(LocalDate.parse("2010-05-12"))
                 .build();
 
-        User updateUser = controller.update(userUpdate);
+        UserDto updateUser = controller.update(userUpdate);
         Assertions.assertEquals(userUpdate, updateUser);
         Assertions.assertEquals(1, updateUser.getId());
     }

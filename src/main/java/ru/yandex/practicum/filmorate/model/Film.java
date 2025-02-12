@@ -5,11 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
 public class Film {
-    Long id;
+    private Long id;
 
     @NotNull
     @NotBlank
@@ -19,12 +20,17 @@ public class Film {
     private String description;
 
     @Past
+    @NotNull
     private LocalDate releaseDate;
 
     @Positive
     private int duration;
 
     private int likesCount;
+
+    private MpaRating mpa;
+
+    private List<Genre> genres;
 
     public void addLike() {
         this.likesCount++;
