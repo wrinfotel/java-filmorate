@@ -15,8 +15,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,7 +34,7 @@ public class UsersControllerTests {
     void shouldCreateUser() {
         User user = User.builder()
                 .name("Test")
-                .email("test"+Math.random()+"@test.ru")
+                .email("test" + Math.random() + "@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
@@ -142,7 +140,7 @@ public class UsersControllerTests {
     void shouldUpdateUser() {
         User user = User.builder()
                 .name("Test")
-                .email("testUuU"+ Math.random() +"@test.ru")
+                .email("testUuU" + Math.random() + "@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
