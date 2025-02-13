@@ -34,7 +34,7 @@ class FilmDbStorageTests {
             .description("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
             .releaseDate(LocalDate.parse("2011-05-12"))
             .duration(100)
-            .mpa(MpaRating.builder().id(1).build())
+            .mpa(MpaRating.builder().id(1L).build())
             .genres(List.of(genre))
             .build();
 
@@ -43,7 +43,7 @@ class FilmDbStorageTests {
             .description("Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
             .releaseDate(LocalDate.parse("2005-05-12"))
             .duration(120)
-            .mpa(MpaRating.builder().id(2).build())
+            .mpa(MpaRating.builder().id(2L).build())
             .genres(List.of(genre))
             .build();
 
@@ -59,7 +59,7 @@ class FilmDbStorageTests {
     @Test
     public void testFindFilmById() {
         Film created = filmStorage.create(newFilm);
-        Optional<Film> filmOptional = filmStorage.findOne(created.getId());
+        Optional<Film> filmOptional = filmStorage.findById(created.getId());
 
         assertThat(filmOptional)
                 .isPresent()
@@ -82,7 +82,7 @@ class FilmDbStorageTests {
         Film filmCreated = filmStorage.create(newFilm);
         filmCreated.setName("TestFilmUpdated");
         filmStorage.update(filmCreated);
-        Optional<Film> updated = filmStorage.findOne(filmCreated.getId());
+        Optional<Film> updated = filmStorage.findById(filmCreated.getId());
 
         assertThat(updated)
                 .isPresent()

@@ -26,7 +26,7 @@ class MpaDbStorageTests {
 
     @Test
     public void testFindMpaById() {
-        Optional<MpaRating> genreOptional = mpaStorage.findOne(1);
+        Optional<MpaRating> genreOptional = mpaStorage.findById(1);
 
         assertThat(genreOptional)
                 .isPresent()

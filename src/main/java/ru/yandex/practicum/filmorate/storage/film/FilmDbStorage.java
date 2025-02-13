@@ -10,69 +10,56 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmListRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Film> mapper;
+    private final RowMapper<List<Film>> listMapper;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.listMapper = new FilmListRowMapper();
         this.mapper = new FilmRowMapper();
     }
 
     @Override
     public Collection<Film> findAll() {
-        String sqlQuery = "SELECT fi.*, count(uf.film_id) as likes_count, mr.id as mpa_id, mr.name as mpa_name" +
-                " FROM \"film\" as fi " +
-                "LEFT JOIN \"user_films\" as uf ON fi.id = uf.film_id LEFT JOIN \"mpa_rating\" AS mr" +
-                " ON fi.rating_id = mr.id GROUP BY fi.ID";
-        List<Film> films = jdbcTemplate.query(sqlQuery, mapper);
-        for (Film film : films) {
-            getFilmGenres(film);
-        }
-        return films;
+        String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id" +
+                " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id";
+
+        return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
+
     }
 
     @Override
-    public Optional<Film> findOne(long id) {
+    public Optional<Film> findById(long id) {
         try {
-            String sqlQuery = "SELECT fi.*, count(uf.film_id) as likes_count, mr.id as mpa_id, mr.name as mpa_name" +
-                    " FROM \"film\" as fi " +
-                    "LEFT JOIN \"user_films\" as uf ON fi.id = uf.film_id LEFT JOIN \"mpa_rating\" AS mr" +
-                    " ON fi.rating_id = mr.id WHERE fi.id = ? GROUP BY fi.ID";
+            String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE fi.id = ?";
             Film result = jdbcTemplate.queryForObject(sqlQuery, mapper, id);
-            if (result != null) {
-                getFilmGenres(result);
-            }
             return Optional.ofNullable(result);
         } catch (EmptyResultDataAccessException ignored) {
             return Optional.empty();
         }
-    }
-
-    private void getFilmGenres(Film film) {
-        String sqlQuery = "SELECT * FROM \"film_genre\" AS fg LEFT JOIN \"genre\" AS gn ON fg.genre_id = gn.id" +
-                " WHERE fg.film_id = ? GROUP BY gn.name ORDER BY gn.id";
-        List<Map<String, Object>> genresList = jdbcTemplate.queryForList(sqlQuery, film.getId());
-        List<Genre> filmGenres = new ArrayList<>();
-        if (!genresList.isEmpty()) {
-            for (Map<String, Object> genre : genresList) {
-                Genre genre1 = Genre.builder()
-                        .id(Long.parseLong(genre.get("id").toString()))
-                        .name(genre.get("name").toString())
-                        .build();
-                filmGenres.add(genre1);
-            }
-        }
-        film.setGenres(filmGenres);
     }
 
     @Override

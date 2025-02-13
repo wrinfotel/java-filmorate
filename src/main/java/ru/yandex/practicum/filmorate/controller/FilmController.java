@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -27,7 +28,7 @@ public class FilmController {
 
     @GetMapping("/{filmId}")
     public FilmDto getFilmById(@PathVariable Long filmId) {
-        return filmService.findFilmById(filmId);
+        return FilmMapper.mapToFilmDto(filmService.findById(filmId));
     }
 
     @PutMapping("/{id}/like/{userId}")

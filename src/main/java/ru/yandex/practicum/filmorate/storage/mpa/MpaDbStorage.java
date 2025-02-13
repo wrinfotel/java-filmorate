@@ -30,7 +30,7 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     @Override
-    public Optional<MpaRating> findOne(long id) {
+    public Optional<MpaRating> findById(long id) {
         try {
             String sqlQuery = "SELECT * FROM \"mpa_rating\" WHERE id = ?";
             MpaRating result = jdbcTemplate.queryForObject(sqlQuery, mapper, id);

@@ -136,7 +136,7 @@ public class FilmControllerTests {
 
     @Test
     void shouldUpdateFilm() {
-        MpaRating mpa = MpaRating.builder().id(1).build();
+        MpaRating mpa = MpaRating.builder().id(1L).build();
         Film film = Film.builder()
                 .name("TestFilm")
                 .description("test Description")

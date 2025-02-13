@@ -51,7 +51,7 @@ class UserDbStorageTests {
     @Test
     public void testFindUserById() {
         User created = userStorage.create(newUser);
-        Optional<User> userOptional = userStorage.findOne(created.getId());
+        Optional<User> userOptional = userStorage.findById(created.getId());
 
         assertThat(userOptional)
                 .isPresent()
@@ -74,7 +74,7 @@ class UserDbStorageTests {
         User userCreated = userStorage.create(newUser);
         userCreated.setName("TestUpdated");
         userStorage.update(userCreated);
-        Optional<User> updated = userStorage.findOne(userCreated.getId());
+        Optional<User> updated = userStorage.findById(userCreated.getId());
 
         assertThat(updated)
                 .isPresent()

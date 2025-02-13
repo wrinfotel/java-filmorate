@@ -14,7 +14,7 @@ public interface UserStorage {
 
     User update(User newUser);
 
-    Optional<User> findOne(long id);
+    Optional<User> findById(long id);
 
     void addFriend(User user, User friend, boolean status);
 

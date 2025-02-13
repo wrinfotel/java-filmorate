@@ -29,7 +29,7 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     @Override
-    public Optional<Genre> findOne(long id) {
+    public Optional<Genre> findById(long id) {
         try {
             String sqlQuery = "SELECT * FROM \"genre\" WHERE id = ?";
             Genre result = jdbcTemplate.queryForObject(sqlQuery, mapper, id);

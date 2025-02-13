@@ -36,7 +36,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> findOne(long id) {
+    public Optional<User> findById(long id) {
         try {
             String sqlQuery = "SELECT * FROM \"user\" WHERE id = ?";
             User result = jdbcTemplate.queryForObject(sqlQuery, mapper, id);

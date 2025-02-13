@@ -8,36 +8,41 @@ import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.*;
 
 @Component
-public class FilmRowMapper implements RowMapper<Film> {
+public class FilmListRowMapper implements RowMapper<List<Film>> {
 
     @Override
-    public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
-        Film film = null;
+    public List<Film> mapRow(ResultSet rs, int rowNum) throws SQLException {
+        Map<Long, Film> filmsMap = new HashMap<>();
         do {
+            Long filmId = rs.getLong("id");
+            Film film = filmsMap.get(filmId);
             if (film == null) {
                 film = Film.builder()
-                        .id(rs.getLong("id"))
+                        .id(filmId)
                         .name(rs.getString("name"))
                         .description(rs.getString("description"))
-                        .releaseDate(rs.getDate("release_date").toLocalDate())
+                        .releaseDate(Objects.requireNonNull(rs.getDate("release_date")).toLocalDate())
                         .duration(rs.getInt("duration"))
                         .likesCount(rs.getInt("likes_count"))
                         .genres(new ArrayList<>())
                         .build();
-
-                MpaRating mpaRating = MpaRating.builder()
-                        .id(rs.getLong("mpa_id"))
-                        .name(rs.getString("mpa_name"))
-                        .build();
-                film.setMpa(mpaRating);
+                if (rs.getLong("MPA_ID") != 0) {
+                    MpaRating mpaRating = MpaRating.builder()
+                            .id(rs.getLong("MPA_ID"))
+                            .name(rs.getString("MPA_NAME"))
+                            .build();
+                    film.setMpa(mpaRating);
+                }
+                filmsMap.put(film.getId(), film);
             }
-            if (rs.getLong("genre_id") != 0) {
+
+            if (rs.getLong("GENRE_ID") != 0) {
                 Genre genre = Genre.builder()
-                        .id(rs.getLong("genre_id"))
-                        .name(rs.getString("genre_name"))
+                        .id(rs.getLong("GENRE_ID"))
+                        .name(rs.getString("GENRE_NAME"))
                         .build();
                 if (!film.getGenres().contains(genre)) {
                     film.getGenres().add(genre);
@@ -45,6 +50,6 @@ public class FilmRowMapper implements RowMapper<Film> {
             }
         } while (rs.next());
 
-        return film;
+        return filmsMap.values().stream().toList();
     }
 }

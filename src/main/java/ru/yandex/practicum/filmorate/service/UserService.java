@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.UserDto;
@@ -15,32 +14,26 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
-
 public class UserService {
 
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
+    private final UserStorage userStorage;
 
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public Collection<UserDto> findAll() {
         return userStorage.findAll().stream()
                 .map(UserMapper::mapToUserDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public User findById(long userId) {
-        return userStorage.findOne(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
-    }
-
-    public UserDto findUserById(long userId) {
-        return userStorage.findOne(userId).map(UserMapper::mapToUserDto)
+        return userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
     }
 
@@ -61,7 +54,7 @@ public class UserService {
         if (newUser.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
-        User oldUser = userStorage.findOne(newUser.getId())
+        User oldUser = userStorage.findById(newUser.getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден"));
         User updatedUser = userStorage.update(UserMapper.updateUserFields(oldUser, newUser));
         log.info("Updated user with id " + updatedUser.getId());
