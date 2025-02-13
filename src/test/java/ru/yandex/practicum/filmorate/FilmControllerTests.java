@@ -9,9 +9,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.time.LocalDate;
 
@@ -34,7 +36,7 @@ public class FilmControllerTests {
     void shouldCreateFilm() throws Exception {
         String json = "{\"name\": \"TestFilm\"," +
                 "\"description\": \"test Description\"," +
-                " \"duration\": 100," +
+                " \"duration\": 100, \"mpa\": {\"id\":1}, " +
                 "\"releaseDate\": \"2011-05-12\"}";
 
         mockMvc.perform(post("/films")
@@ -108,7 +110,7 @@ public class FilmControllerTests {
     @Test
     void shouldNotUpdateFilm() {
         Film film = Film.builder()
-                .id(55L)
+                .id(51115L)
                 .name("TestFilm")
                 .description("test Description")
                 .releaseDate(LocalDate.parse("1900-12-27"))
@@ -134,13 +136,15 @@ public class FilmControllerTests {
 
     @Test
     void shouldUpdateFilm() {
+        MpaRating mpa = MpaRating.builder().id(1L).build();
         Film film = Film.builder()
                 .name("TestFilm")
                 .description("test Description")
                 .releaseDate(LocalDate.parse("1900-12-27"))
                 .duration(100)
+                .mpa(mpa)
                 .build();
-        Film createdFilm = controller.create(film);
+        FilmDto createdFilm = controller.create(film);
 
         Film filmUpdate = Film.builder()
                 .id(createdFilm.getId())
@@ -150,7 +154,9 @@ public class FilmControllerTests {
                 .duration(100)
                 .build();
 
-        Film updateFilm = controller.update(filmUpdate);
-        Assertions.assertEquals(filmUpdate, updateFilm);
+        FilmDto updateFilm = controller.update(filmUpdate);
+        Assertions.assertEquals(filmUpdate.getName(), updateFilm.getName());
+        Assertions.assertEquals(filmUpdate.getDescription(), updateFilm.getDescription());
+        Assertions.assertEquals(filmUpdate.getReleaseDate(), updateFilm.getReleaseDate());
     }
 }
