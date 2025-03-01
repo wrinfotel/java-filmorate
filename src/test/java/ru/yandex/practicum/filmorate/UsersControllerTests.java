@@ -9,12 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,13 +34,13 @@ public class UsersControllerTests {
     void shouldCreateUser() {
         User user = User.builder()
                 .name("Test")
-                .email("test@test.ru")
+                .email("test" + Math.random() + "@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
 
-        User createdUser = controller.create(user);
-        Assertions.assertEquals(user, createdUser);
+        UserDto createdUser = controller.create(user);
+        Assertions.assertNotNull(createdUser.getId());
     }
 
     @Test
@@ -140,34 +140,33 @@ public class UsersControllerTests {
     void shouldUpdateUser() {
         User user = User.builder()
                 .name("Test")
-                .email("testUu@test.ru")
+                .email("testUuU" + Math.random() + "@test.ru")
                 .login("testLogin")
                 .birthday(LocalDate.parse("2011-05-12"))
                 .build();
 
-        User createdUser = controller.create(user);
-        Assertions.assertEquals(user, createdUser);
-        Assertions.assertEquals(1, createdUser.getId());
+        UserDto createdUser = controller.create(user);
+        Assertions.assertNotNull(createdUser.getId());
 
         User userUpdate = User.builder()
-                .id(1L)
+                .id(createdUser.getId())
                 .name("TestUpdated")
                 .email("test@testupdate.ru")
                 .login("testLoginUpdate")
-                .friends(new HashSet<>())
-                .likedFilms(new HashSet<>())
                 .birthday(LocalDate.parse("2010-05-12"))
                 .build();
 
-        User updateUser = controller.update(userUpdate);
-        Assertions.assertEquals(userUpdate, updateUser);
-        Assertions.assertEquals(1, updateUser.getId());
+        UserDto updateUser = controller.update(userUpdate);
+        Assertions.assertEquals(userUpdate.getName(), updateUser.getName());
+        Assertions.assertEquals(userUpdate.getEmail(), updateUser.getEmail());
+        Assertions.assertEquals(userUpdate.getLogin(), updateUser.getLogin());
+        Assertions.assertEquals(createdUser.getId(), updateUser.getId());
     }
 
     @Test
     void shouldNotUpdateUser() {
         User user = User.builder()
-                .id(10L)
+                .id(10000L)
                 .name("Test")
                 .email("testNuu@test.ru")
                 .login("testLogin")
