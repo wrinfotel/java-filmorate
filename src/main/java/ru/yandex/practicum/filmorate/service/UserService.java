@@ -93,6 +93,14 @@ public class UserService {
         changeFriendshipStatus(friend, user, false);
     }
 
+    public void deleteUserById(long userId) {
+        User user = findById(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователя с id = " + userId + " не существует");
+        }
+        userStorage.deleteById(userId);
+    }
+
     public List<UserDto> commonFriends(long userId, long friendId) {
         User user = findById(userId);
         User friend = findById(friendId);

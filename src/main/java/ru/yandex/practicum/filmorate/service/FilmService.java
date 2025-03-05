@@ -111,4 +111,10 @@ public class FilmService {
                 .sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount()))
                 .limit(count).toList();
     }
+
+    public void deleteById(Long filmId) {
+        if (userService.findById(filmId) != null ) {
+            filmStorage.deleteById(filmId);
+        }
+    }
 }
