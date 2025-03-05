@@ -45,6 +45,12 @@ public class UserController {
         userService.deleteFriend(id, friendId);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteUserById(@PathVariable Long id) {
+        userService.deleteUserById(id);
+    }
+
     @GetMapping("/{id}/friends")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> getUserFriends(@PathVariable Long id) {

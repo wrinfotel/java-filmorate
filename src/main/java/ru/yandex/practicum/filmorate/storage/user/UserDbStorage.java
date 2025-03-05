@@ -117,9 +117,14 @@ public class UserDbStorage implements UserStorage {
         return newUser;
     }
 
-    public boolean delete(long id) {
+    public boolean deleteById(long id) {
+        deleteUserFiends(id);
         String sqlQuery = "DELETE FROM \"user\" WHERE id = ?";
-
         return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    public void deleteUserFiends(long id) {
+        String sqlQuery = "DELETE FROM \"user_friends\" WHERE user_id = ?";
+        jdbcTemplate.update(sqlQuery, id);
     }
 }
