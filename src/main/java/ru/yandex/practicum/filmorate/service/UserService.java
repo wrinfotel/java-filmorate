@@ -95,9 +95,6 @@ public class UserService {
 
     public void deleteUserById(long userId) {
         User user = findById(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователя с id = " + userId + " не существует");
-        }
         userStorage.deleteById(userId);
     }
 
