@@ -34,8 +34,8 @@ public class ReviewService {
             throw new ValidationException("Id must be specified");
         }
 
-        Review oldReview = reviewStorage.getReviewById(newReview.getReviewId()).
-                orElseThrow(() -> new NotFoundException("Review with id = " + newReview.getReviewId() + "was not found"));
+        Review oldReview = reviewStorage.getReviewById(newReview.getReviewId())
+                .orElseThrow(() -> new NotFoundException("Review with id = " + newReview.getReviewId() + "was not found"));
 
         Review updatedReview = reviewStorage.updateReview(ReviewMapper.updateReviewFields(oldReview, newReview));
 
@@ -54,8 +54,8 @@ public class ReviewService {
     }
 
     public Review getReviewById(Long id) {
-        return reviewStorage.getReviewById(id).
-                orElseThrow(() -> new NotFoundException("Review with id " + id + "was not found"));
+        return reviewStorage.getReviewById(id)
+            .orElseThrow(() -> new NotFoundException("Review with id " + id + "was not found"));
     }
 
     public List<Review> getReviewByFilm(Long id, int count) {
