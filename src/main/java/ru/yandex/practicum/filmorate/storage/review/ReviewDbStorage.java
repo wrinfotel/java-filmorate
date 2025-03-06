@@ -35,7 +35,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review createReview(Review review) {
-        final String ADD_REVIEW_QUERY = """ 
+        final String ADD_REVIEW_QUERY = """
             INSERT INTO PUBLIC."reviews" (content, is_positive, user_id, film_id)
             VALUES (?, ?, ?, ?)
             """;
@@ -63,7 +63,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review updateReview(Review review) {
-        final String UPDATE_REVIEW_QUERY = """ 
+        final String UPDATE_REVIEW_QUERY = """
             UPDATE PUBLIC."reviews" SET content = ?, is_positive = ?
             WHERE id = ?
             """;
