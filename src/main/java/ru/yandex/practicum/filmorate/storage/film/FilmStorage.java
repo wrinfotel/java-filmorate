@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -19,4 +20,6 @@ public interface FilmStorage {
     void addLike(Film film, User user);
 
     boolean removeLike(Film film, User user);
+
+    Collection<Film> findFilmsByDirector(Director director, String sortField);
 }

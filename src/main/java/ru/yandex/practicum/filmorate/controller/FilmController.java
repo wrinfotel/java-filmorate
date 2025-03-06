@@ -56,4 +56,10 @@ public class FilmController {
     public FilmDto update(@Valid @RequestBody Film newFilm) {
         return filmService.update(newFilm);
     }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<FilmDto> getFilmsByDirector(@PathVariable Long directorId,
+                                                  @RequestParam(defaultValue = "likes", required = false) String sortBy) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
 }

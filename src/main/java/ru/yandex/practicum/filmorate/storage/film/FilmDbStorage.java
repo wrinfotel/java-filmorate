@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
@@ -37,9 +38,12 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id" +
+                " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                " dir.id AS director_id, dir.name AS director_name" +
                 " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
                 " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
                 " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id";
 
         return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
@@ -50,9 +54,12 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> findById(long id) {
         try {
             String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
                     " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
                     " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
                     " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
                     " WHERE fi.id = ?";
             Film result = jdbcTemplate.queryForObject(sqlQuery, mapper, id);
@@ -89,6 +96,16 @@ public class FilmDbStorage implements FilmStorage {
                         ps.setLong(2, genre.getId());
                     });
         }
+
+        if (film.getDirectors() != null) {
+            String queryForDirectors = "INSERT INTO \"film_director\" (film_id, director_id) VALUES (?, ?)";
+            jdbcTemplate.batchUpdate(queryForDirectors, film.getDirectors(), film.getDirectors().size(),
+                    (PreparedStatement ps, Director director) -> {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, director.getId());
+                    });
+        }
+
         return film;
     }
 
@@ -117,6 +134,18 @@ public class FilmDbStorage implements FilmStorage {
                     });
         }
 
+        String sqlDeleteGenreQueryDirector = "DELETE FROM \"film_director\" WHERE film_id = ?";
+        jdbcTemplate.update(sqlDeleteGenreQueryDirector, newFilm.getId());
+
+        if (newFilm.getDirectors() != null) {
+            String queryForDirectors = "INSERT INTO \"film_director\" (film_id, director_id) VALUES (?, ?)";
+            jdbcTemplate.batchUpdate(queryForDirectors, newFilm.getDirectors(), newFilm.getDirectors().size(),
+                    (PreparedStatement ps, Director director) -> {
+                        ps.setLong(1, newFilm.getId());
+                        ps.setLong(2, director.getId());
+                    });
+        }
+
         return newFilm;
     }
 
@@ -137,6 +166,33 @@ public class FilmDbStorage implements FilmStorage {
     public boolean removeLike(Film film, User user) {
         String sqlQuery = "DELETE FROM \"user_films\" WHERE user_id = ? AND film_id = ?";
         return jdbcTemplate.update(sqlQuery, user.getId(), film.getId()) > 0;
+    }
+
+    @Override
+    public Collection<Film> findFilmsByDirector(Director director, String sortField) {
+        String sqlQuery;
+        if (sortField.equals("year")) {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE director_id = ? ORDER BY YEAR(fi.release_date) DESC";
+        } else {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE director_id = ? ORDER BY likes_count DESC";
+        }
+        return jdbcTemplate.query(sqlQuery, listMapper, director.getId()).getFirst();
     }
 
     public boolean delete(long id) {

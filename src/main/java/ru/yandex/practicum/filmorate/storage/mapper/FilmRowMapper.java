@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.mapper;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -26,6 +27,7 @@ public class FilmRowMapper implements RowMapper<Film> {
                         .duration(rs.getInt("duration"))
                         .likesCount(rs.getInt("likes_count"))
                         .genres(new ArrayList<>())
+                        .directors(new ArrayList<>())
                         .build();
 
                 MpaRating mpaRating = MpaRating.builder()
@@ -41,6 +43,16 @@ public class FilmRowMapper implements RowMapper<Film> {
                         .build();
                 if (!film.getGenres().contains(genre)) {
                     film.getGenres().add(genre);
+                }
+            }
+
+            if (rs.getLong("director_id") != 0) {
+                Director director = Director.builder()
+                        .id(rs.getLong("director_id"))
+                        .name(rs.getString("director_name"))
+                        .build();
+                if (!film.getDirectors().contains(director)) {
+                    film.getDirectors().add(director);
                 }
             }
         } while (rs.next());

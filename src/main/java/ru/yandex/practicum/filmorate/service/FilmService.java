@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
@@ -28,16 +29,19 @@ public class FilmService {
 
     private final GenreService genreService;
 
+    private final DirectorService directorService;
+
     private final Logger log = LoggerFactory.getLogger(FilmService.class);
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        UserService userService,
                        MpaService mpaService,
-                       GenreService genreService) {
+                       GenreService genreService, DirectorService directorService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.mpaService = mpaService;
         this.genreService = genreService;
+        this.directorService = directorService;
     }
 
     public Collection<FilmDto> findAll() {
@@ -110,5 +114,12 @@ public class FilmService {
         return findAll().stream()
                 .sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount()))
                 .limit(count).toList();
+    }
+
+    public Collection<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
+        Director director = directorService.findById(directorId);
+        return filmStorage.findFilmsByDirector(director, sortBy).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }

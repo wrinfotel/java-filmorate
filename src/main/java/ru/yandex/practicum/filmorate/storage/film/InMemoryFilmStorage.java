@@ -1,13 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -54,9 +52,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     public boolean removeLike(Film film, User user) {
         if (film.getLikesCount() > 0) {
             film.removeLike();
-
         }
         return true;
+    }
+
+    @Override
+    public Collection<Film> findFilmsByDirector(Director director, String sortField) {
+        return List.of();
     }
 
     private long getNextId() {

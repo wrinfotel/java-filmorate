@@ -16,6 +16,9 @@ public class FilmMapper {
         if (newFilm.getReleaseDate() != null) {
             oldFilm.setReleaseDate(newFilm.getReleaseDate());
         }
+        if (newFilm.getDirectors() != null) {
+            oldFilm.setDirectors(newFilm.getDirectors());
+        }
         oldFilm.setDuration(newFilm.getDuration());
         return oldFilm;
     }
@@ -30,6 +33,7 @@ public class FilmMapper {
         dto.setLikesCount(film.getLikesCount());
         dto.setMpa(film.getMpa());
         dto.setGenres(film.getGenres());
+        dto.setDirectors(film.getDirectors());
         return dto;
     }
 }
