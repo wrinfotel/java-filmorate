@@ -30,7 +30,8 @@ public class FilmService {
 
     private final Logger log = LoggerFactory.getLogger(FilmService.class);
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService, MpaService mpaService, GenreService genreService) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService,
+                       MpaService mpaService, GenreService genreService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.mpaService = mpaService;
@@ -79,7 +80,8 @@ public class FilmService {
             log.warn("Ошибка валидации - Дата релиза должна быть позже или равна 28 декабря 1895");
             throw new ValidationException("Дата релиза должна быть позже или равна 28 декабря 1895");
         }
-        Film oldFilm = filmStorage.findById(newFilm.getId()).orElseThrow(() -> new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
+        Film oldFilm = filmStorage.findById(newFilm.getId()).orElseThrow(() ->
+                new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
         checkGenres(newFilm.getGenres());
         Film updatedFilm = filmStorage.update(FilmMapper.updateFilmFields(oldFilm, newFilm));
         log.info("Film updated " + updatedFilm.getId());
@@ -99,7 +101,8 @@ public class FilmService {
     }
 
     public List<FilmDto> getTopFilms(Integer count) {
-        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount())).limit(count).toList();
+        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(),
+                f1.getLikesCount())).limit(count).toList();
     }
 
     public void deleteById(Long filmId) {
