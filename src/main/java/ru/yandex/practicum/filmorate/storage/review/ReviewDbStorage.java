@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.review;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -18,6 +19,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 @Slf4j
@@ -78,9 +80,7 @@ public class ReviewDbStorage implements ReviewStorage {
             throw new NotFoundException("No review with this id was found.");
         }
 
-        Review oldReview = getReviewById(review.getReviewId());
-
-        return oldReview;
+        return review;
     }
 
     @Override
@@ -91,14 +91,13 @@ public class ReviewDbStorage implements ReviewStorage {
         final String DELETE_USEFUL_QUERY = """
             DELETE FROM PUBLIC."useful" WHERE review_id = ?
             """;
-
-        Review review = getReviewById(id);
         jdbcTemplate.update(DELETE_USEFUL_QUERY, id);
         jdbcTemplate.update(DELETE_REVIEW_QUERY, id);
     }
 
     @Override
-    public Review getReviewById(Long id) {
+    public Optional<Review> getReviewById(Long id) {
+        try {
         final String QUERY = """
             SELECT r.id, r.content, r.is_positive, u.name AS user_name, f.name AS film_name,
                r.user_id, r.film_id,
@@ -111,8 +110,12 @@ public class ReviewDbStorage implements ReviewStorage {
             WHERE r.id = ?
             GROUP BY r.id, r.content, r.is_positive, u.name, f.name, r.user_id, r.film_id;
             """;
-
-        return jdbcTemplate.queryForObject(QUERY, mapper, id);
+        Review review = jdbcTemplate.queryForObject(QUERY, mapper, id);
+        return Optional.ofNullable(review);
+        } catch (
+        EmptyResultDataAccessException ignored) {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -187,7 +190,6 @@ public class ReviewDbStorage implements ReviewStorage {
             jdbcTemplate.update(insertSql, reviewId, isLike, userId);
         }
         log.info("Add {} to review {} or update for user {}.", isLike ? "like" : "dislike", reviewId, userId);
-
     }
 
     @Override

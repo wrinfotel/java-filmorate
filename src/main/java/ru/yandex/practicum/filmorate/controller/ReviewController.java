@@ -3,7 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
@@ -18,12 +20,13 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Review createReview(@Valid @RequestBody Review review) {
         return reviewService.createReview(review);
     }
 
     @PutMapping
-    public Review updateReview(@Valid @RequestBody Review review) {
+    public ReviewDto updateReview(@Valid @RequestBody Review review) {
         return reviewService.updateReview(review);
     }
 

@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
@@ -18,40 +20,32 @@ public class ReviewService {
     }
 
     public Review createReview(Review review) {
-        if (review.getUserId() == null || review.getUserId() <= 0) {
+        if (review.getUserId() <= 0) {
             throw new NotFoundException("User not found.");
         }
-        if (review.getFilmId() == null || review.getFilmId() <= 0) {
+        if (review.getFilmId() <= 0) {
             throw new NotFoundException("Film not found.");
         }
-        if (review.getIsPositive() == null) {
-            throw new ValidationException("IsPositive is null");
-        }
-        try {
-            return reviewStorage.createReview(review);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while adding. " + e.getMessage());
-        }
+        return reviewStorage.createReview(review);
     }
 
-    public Review updateReview(Review review) {
-        if (review.getUserId() == null || review.getUserId() <= 0) {
-            throw new NotFoundException("User not found.");
+    public ReviewDto updateReview(Review newReview) {
+        if (newReview.getReviewId() == null) {
+            throw new ValidationException("Id must be specified");
         }
-        if (review.getFilmId() == null || review.getFilmId() <= 0) {
-            throw new NotFoundException("Film not found.");
-        }
-        if (review.getIsPositive() == null) {
-            throw new ValidationException("IsPositive is null");
-        }
-        try {
-            return reviewStorage.updateReview(review);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while updating. " + e.getMessage());
-        }
+
+        Review oldReview = reviewStorage.getReviewById(newReview.getReviewId()).
+                orElseThrow(() -> new NotFoundException("Review with id = " + newReview.getReviewId() + "was not found"));
+
+        Review updatedReview = reviewStorage.updateReview(ReviewMapper.updateReviewFields(oldReview, newReview));
+
+        return ReviewMapper.mapToReviewDto(updatedReview);
     }
 
     public void deleteReview(Long id) {
+        reviewStorage.getReviewById(id)
+                .orElseThrow(() -> new NotFoundException("Review with id = " + id + " was not found"));
+
         try {
             reviewStorage.deleteReview(id);
         } catch (Exception e) {
@@ -60,11 +54,8 @@ public class ReviewService {
     }
 
     public Review getReviewById(Long id) {
-        try {
-            return reviewStorage.getReviewById(id);
-        } catch (Exception e) {
-            throw new NotFoundException("Review with id = " + id + " not found " + e.getMessage());
-        }
+        return reviewStorage.getReviewById(id).
+                orElseThrow(() -> new NotFoundException("Review with id " + id + "was not found"));
     }
 
     public List<Review> getReviewByFilm(Long id, int count) {

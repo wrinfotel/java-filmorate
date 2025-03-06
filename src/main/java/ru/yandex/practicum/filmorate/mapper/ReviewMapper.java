@@ -1,0 +1,26 @@
+package ru.yandex.practicum.filmorate.mapper;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.dto.ReviewDto;
+import ru.yandex.practicum.filmorate.model.Review;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ReviewMapper {
+
+    public static Review updateReviewFields(Review oldReview, Review newReview) {
+        oldReview.setContent(newReview.getContent());
+        oldReview.setIsPositive(newReview.getIsPositive());
+        return oldReview;
+    }
+
+    public static ReviewDto mapToReviewDto(Review review) {
+        ReviewDto dto = new ReviewDto();
+        dto.setReviewId(review.getReviewId());
+        dto.setContent(review.getContent());
+        dto.setIsPositive(review.getIsPositive());
+        dto.setUserId(review.getUserId());
+        dto.setFilmId(review.getFilmId());
+        return dto;
+    }
+}

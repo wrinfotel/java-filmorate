@@ -14,6 +14,7 @@ public class Review {
     @NotBlank
     private String content;
 
+    @NotNull
     private Boolean isPositive;
 
     @NotNull
