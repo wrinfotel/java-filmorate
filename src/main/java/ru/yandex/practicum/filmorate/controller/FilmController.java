@@ -56,4 +56,9 @@ public class FilmController {
     public FilmDto update(@Valid @RequestBody Film newFilm) {
         return filmService.update(newFilm);
     }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        return filmService.getCommonFilms(userId, friendId);
+    }
 }

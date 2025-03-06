@@ -14,8 +14,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FilmService {
@@ -110,5 +109,9 @@ public class FilmService {
         return findAll().stream()
                 .sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount()))
                 .limit(count).toList();
+    }
+
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId);
     }
 }

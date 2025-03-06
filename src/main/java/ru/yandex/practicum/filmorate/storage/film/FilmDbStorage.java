@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mapper.CommonFilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmListRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
@@ -26,12 +27,14 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Film> mapper;
     private final RowMapper<List<Film>> listMapper;
+    private final RowMapper<Film> common;
 
     @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.listMapper = new FilmListRowMapper();
         this.mapper = new FilmRowMapper();
+        this.common = new CommonFilmRowMapper();
     }
 
     @Override
@@ -142,5 +145,24 @@ public class FilmDbStorage implements FilmStorage {
     public boolean delete(long id) {
         String sqlQuery = "DELETE FROM \"film\" WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sqlQuery = "SELECT f.*, g.id AS genre_id, g.name AS genre_name " +
+                "FROM \"film\" AS f " +
+                "LEFT JOIN \"film_genre\" fg ON f.id = fg.film_id " +
+                "LEFT JOIN \"genre\" g ON fg.genre_id = g.id " +
+                "LEFT JOIN \"user_films\" AS uf1 ON f.id = uf1.film_id " +
+                "LEFT JOIN \"user_films\" AS uf2 ON f.id = uf2.film_id " +
+                "WHERE uf1.user_id = ? AND uf2.user_id = ?" +
+                "ORDER BY f.rating_id DESC";
+
+        try {
+            return jdbcTemplate.query(sqlQuery, common, userId, friendId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Произошла ошибка при билде", e);
+        }
     }
 }
