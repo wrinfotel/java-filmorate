@@ -36,7 +36,8 @@ public class FilmService {
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        UserService userService,
                        MpaService mpaService,
-                       GenreService genreService, DirectorService directorService) {
+                       GenreService genreService,
+                       DirectorService directorService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.mpaService = mpaService;
@@ -111,9 +112,13 @@ public class FilmService {
     }
 
     public List<FilmDto> getTopFilms(Integer count) {
-        return findAll().stream()
-                .sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount()))
-                .limit(count).toList();
+        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(),
+                f1.getLikesCount())).limit(count).toList();
+    }
+
+    public void deleteById(Long filmId) {
+        Film film = findById(filmId);
+        filmStorage.deleteById(filmId);
     }
 
     public Collection<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {

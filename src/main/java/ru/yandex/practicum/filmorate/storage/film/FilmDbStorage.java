@@ -184,7 +184,8 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sqlQuery, listMapper, director.getId()).getFirst();
     }
 
-    public boolean delete(long id) {
+    @Override
+    public boolean deleteById(long id) {
         String sqlQuery = "DELETE FROM \"film\" WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
