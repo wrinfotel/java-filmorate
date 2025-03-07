@@ -93,6 +93,11 @@ public class UserService {
         changeFriendshipStatus(friend, user, false);
     }
 
+    public void deleteUserById(long userId) {
+        User user = findById(userId);
+        userStorage.deleteById(userId);
+    }
+
     public List<UserDto> commonFriends(long userId, long friendId) {
         User user = findById(userId);
         User friend = findById(friendId);
