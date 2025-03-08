@@ -111,7 +111,9 @@ public class FilmService {
                 .limit(count).toList();
     }
 
-    public List<Film> getCommonFilms(Long userId, Long friendId) {
-        return filmStorage.getCommonFilms(userId, friendId);
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }
