@@ -115,7 +115,7 @@ class UserDbStorageTests {
         Collection<User> users = userStorage.findAll();
         Assertions.assertEquals(2, users.size());
 
-        userStorage.delete(toBeDeleted.getId());
+        userStorage.deleteById(toBeDeleted.getId());
 
         Collection<User> usersAfterDelete = userStorage.findAll();
         Assertions.assertEquals(1, usersAfterDelete.size());

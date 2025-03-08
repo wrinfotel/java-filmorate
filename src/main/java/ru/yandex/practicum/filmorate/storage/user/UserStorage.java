@@ -20,6 +20,8 @@ public interface UserStorage {
 
     void removeFriend(User user, User friend);
 
+    boolean deleteById(long id);
+
     List<User> getFriends(User user);
 
     void acceptFriendship(User user, User friend, boolean status);
