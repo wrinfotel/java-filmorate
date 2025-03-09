@@ -16,7 +16,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -124,7 +123,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getPopularFilm(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getPopularFilm(count, genreId, year).stream().map(FilmMapper ::mapToFilmDto).toList();
+        return filmStorage.getPopularFilm(count, genreId, year).stream().map(FilmMapper::mapToFilmDto).toList();
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
