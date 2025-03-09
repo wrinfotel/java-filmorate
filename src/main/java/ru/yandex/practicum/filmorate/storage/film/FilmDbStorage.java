@@ -214,4 +214,64 @@ public class FilmDbStorage implements FilmStorage {
             throw new RuntimeException("Произошла ошибка при билде", e);
         }
     }
+
+    @Override
+    public Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year) {
+        String sqlQuery;
+        if (genreId == 0 && year == 0) {
+             sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " GROUP BY fi.id, gen.id " +
+                    " ORDER BY likes_count DESC " +
+                    " LIMIT ?";
+        } else if (genreId != 0 && year == 0) {
+             sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE gen.id = " + genreId + " " +
+                    " GROUP BY fi.id, gen.id " +
+                    " ORDER BY likes_count DESC " +
+                    " LIMIT ?";
+        } else if (genreId == 0 && year != 0) {
+             sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year + " " +
+                    " GROUP BY fi.id, gen.id " +
+                    " ORDER BY likes_count DESC " +
+                    " LIMIT ?";
+        } else {
+             sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE gen.id = " + genreId + " AND EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year
+                    + " " +
+                    " GROUP BY fi.id, gen.id " +
+                    " ORDER BY likes_count DESC " +
+                    " LIMIT ?";
+        }
+
+        return jdbcTemplate.query(sqlQuery, listMapper, count).getFirst();
+    }
 }

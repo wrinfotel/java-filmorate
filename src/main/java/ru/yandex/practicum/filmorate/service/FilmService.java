@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -110,10 +111,10 @@ public class FilmService {
         filmStorage.removeLike(film, user);
     }
 
-    public List<FilmDto> getTopFilms(Integer count) {
-        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(),
-                f1.getLikesCount())).limit(count).toList();
+    public List<Film> getPopularFilm(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilm(count, genreId, year).stream().toList();
     }
+
 
     public void deleteById(Long filmId) {
         Film film = findById(filmId);
