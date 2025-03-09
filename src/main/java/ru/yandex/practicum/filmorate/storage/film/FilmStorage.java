@@ -24,9 +24,9 @@ public interface FilmStorage {
 
     Collection<Film> findFilmsByDirector(Director director, String sortField);
 
-    Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year);
-
     List<Film> getCommonFilms(Long userId, Long friendId);
 
     boolean deleteById(long id);
+
+    Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year);
 }

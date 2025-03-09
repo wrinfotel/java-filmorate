@@ -111,11 +111,6 @@ public class FilmService {
         filmStorage.removeLike(film, user);
     }
 
-    public List<Film> getPopularFilm(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getPopularFilm(count, genreId, year).stream().toList();
-    }
-
-
     public void deleteById(Long filmId) {
         Film film = findById(filmId);
         filmStorage.deleteById(filmId);
@@ -128,9 +123,14 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getPopularFilm(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilm(count, genreId, year).stream().map(FilmMapper ::mapToFilmDto).toList();
+    }
+
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
+
 }
