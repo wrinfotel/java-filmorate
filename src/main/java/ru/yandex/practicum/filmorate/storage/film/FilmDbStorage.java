@@ -42,8 +42,14 @@ public class FilmDbStorage implements FilmStorage {
                 " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
                 " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
                 " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id";
-
-        return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
+        try {
+            return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Произошла ошибка при билде", e);
+        }
 
     }
 
@@ -185,6 +191,54 @@ public class FilmDbStorage implements FilmStorage {
     public boolean deleteById(long id) {
         String sqlQuery = "DELETE FROM \"film\" WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    @Override
+    public List<Film> search(String query, String searchBy) {
+        String searchQuery = searchQueryBuilder(query, searchBy);
+        String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                " dir.id AS director_id, dir.name AS director_name" +
+                " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                " WHERE " + searchQuery + " ORDER BY likes_count DESC";
+        try {
+            return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Произошла ошибка при билде", e);
+        }
+    }
+
+    private String searchQueryBuilder(String query, String searchBy) {
+        String[] searchFields = searchBy.split(",");
+        StringBuilder searchQuery = new StringBuilder();
+        if (searchFields.length > 0) {
+            for (String searchField : searchFields) {
+                if (searchField.equals("director")) {
+                    if (!searchQuery.isEmpty()) {
+                        searchQuery.append(" OR ");
+                    }
+                    searchQuery.append("LOWER(dir.name) LIKE LOWER('%").append(query).append("%')");
+                }
+                if (searchField.equals("title")) {
+                    if (!searchQuery.isEmpty()) {
+                        searchQuery.append(" OR ");
+                    }
+                    searchQuery.append("LOWER(fi.name " +
+                            ") LIKE LOWER('%").append(query).append("%')");
+                }
+            }
+        } else {
+            searchQuery.append("LOWER(fi.name " +
+                    ") LIKE LOWER('%").append(query).append("%')");
+        }
+        return searchQuery.toString();
     }
 
     @Override

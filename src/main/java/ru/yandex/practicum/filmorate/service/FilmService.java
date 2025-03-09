@@ -116,7 +116,7 @@ public class FilmService {
     }
 
     public void deleteById(Long filmId) {
-        Film film = findById(filmId);
+        findById(filmId);
         filmStorage.deleteById(filmId);
     }
 
@@ -129,6 +129,12 @@ public class FilmService {
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> search(String query, String searchBy) {
+        return filmStorage.search(query, searchBy).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
