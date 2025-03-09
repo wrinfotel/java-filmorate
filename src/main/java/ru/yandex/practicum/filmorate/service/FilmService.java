@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
@@ -27,22 +28,31 @@ public class FilmService {
 
     private final GenreService genreService;
 
+    private final DirectorService directorService;
+
     private final Logger log = LoggerFactory.getLogger(FilmService.class);
 
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage, UserService userService,
-                       MpaService mpaService, GenreService genreService) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       UserService userService,
+                       MpaService mpaService,
+                       GenreService genreService,
+                       DirectorService directorService) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.mpaService = mpaService;
         this.genreService = genreService;
+        this.directorService = directorService;
     }
 
     public Collection<FilmDto> findAll() {
-        return filmStorage.findAll().stream().map(FilmMapper::mapToFilmDto).toList();
+        return filmStorage.findAll().stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 
     public Film findById(Long id) {
-        return filmStorage.findById(id).orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
+        return filmStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     public FilmDto create(Film film) {
@@ -63,7 +73,8 @@ public class FilmService {
     private void checkGenres(List<Genre> genres) {
         if (genres != null) {
             List<Genre> allGenres = genreService.findAll().stream().toList();
-            long missed = genres.stream().filter(genre -> !allGenres.contains(genre)).count();
+            long missed = genres.stream()
+                    .filter(genre -> !allGenres.contains(genre)).count();
             if (missed > 0) {
                 throw new NotFoundException("Жанр не найден");
             }
@@ -79,8 +90,8 @@ public class FilmService {
             log.warn("Ошибка валидации - Дата релиза должна быть позже или равна 28 декабря 1895");
             throw new ValidationException("Дата релиза должна быть позже или равна 28 декабря 1895");
         }
-        Film oldFilm = filmStorage.findById(newFilm.getId()).orElseThrow(() ->
-                new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
+        Film oldFilm = filmStorage.findById(newFilm.getId())
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
         checkGenres(newFilm.getGenres());
         Film updatedFilm = filmStorage.update(FilmMapper.updateFilmFields(oldFilm, newFilm));
         log.info("Film updated " + updatedFilm.getId());
@@ -107,6 +118,13 @@ public class FilmService {
     public void deleteById(Long filmId) {
         Film film = findById(filmId);
         filmStorage.deleteById(filmId);
+    }
+
+    public Collection<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
+        Director director = directorService.findById(directorId);
+        return filmStorage.findFilmsByDirector(director, sortBy).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
