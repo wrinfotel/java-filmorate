@@ -16,10 +16,7 @@ import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
@@ -188,5 +185,30 @@ public class FilmDbStorage implements FilmStorage {
     public boolean deleteById(long id) {
         String sqlQuery = "DELETE FROM \"film\" WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sqlQuery = "SELECT f.*, " +
+                "g.id AS genre_id, g.name AS genre_name, " +
+                "mpa.NAME AS mpa_name, mpa.ID AS mpa_id, " +
+                "(SELECT COUNT(film_id) FROM \"user_films\" uf WHERE uf.film_id = f.id) AS likes_count " +
+                "FROM \"film\" f " +
+                "LEFT JOIN \"film_genre\" fg ON f.id = fg.film_id " +
+                "LEFT JOIN \"genre\" g ON fg.genre_id = g.id " +
+                "LEFT JOIN \"user_films\" uf1 ON f.id = uf1.film_id " +
+                "LEFT JOIN \"user_films\" uf2 ON f.id = uf2.film_id " +
+                "LEFT JOIN \"mpa_rating\" mpa ON f.rating_id = mpa.id " +
+                "WHERE uf1.user_id = ? AND uf2.user_id = ? " +
+                "ORDER BY likes_count DESC";
+
+        try {
+            return jdbcTemplate.query(sqlQuery, listMapper, userId, friendId).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Произошла ошибка при билде", e);
+        }
     }
 }

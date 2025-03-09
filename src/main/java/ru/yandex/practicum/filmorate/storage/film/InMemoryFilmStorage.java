@@ -77,4 +77,9 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElse(0);
         return ++currentMaxId;
     }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return new ArrayList<>();
+    }
 }
