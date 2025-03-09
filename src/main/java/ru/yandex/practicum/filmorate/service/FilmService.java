@@ -14,8 +14,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FilmService {
@@ -108,5 +107,11 @@ public class FilmService {
     public void deleteById(Long filmId) {
         Film film = findById(filmId);
         filmStorage.deleteById(filmId);
+    }
+
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }
