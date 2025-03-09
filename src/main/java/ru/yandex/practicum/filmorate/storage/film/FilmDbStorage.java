@@ -192,6 +192,7 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery = "SELECT f.*, " +
                 "g.id AS genre_id, g.name AS genre_name, " +
                 "mpa.NAME AS mpa_name, mpa.ID AS mpa_id, " +
+                "dir.id AS director_id, dir.name AS director_name, " +
                 "(SELECT COUNT(film_id) FROM \"user_films\" uf WHERE uf.film_id = f.id) AS likes_count " +
                 "FROM \"film\" f " +
                 "LEFT JOIN \"film_genre\" fg ON f.id = fg.film_id " +
@@ -199,6 +200,8 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN \"user_films\" uf1 ON f.id = uf1.film_id " +
                 "LEFT JOIN \"user_films\" uf2 ON f.id = uf2.film_id " +
                 "LEFT JOIN \"mpa_rating\" mpa ON f.rating_id = mpa.id " +
+                "LEFT JOIN \"film_director\" AS fd ON f.ID = fd.FILM_ID " +
+                "LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID " +
                 "WHERE uf1.user_id = ? AND uf2.user_id = ? " +
                 "ORDER BY likes_count DESC";
 
