@@ -132,4 +132,10 @@ public class FilmService {
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
 }
