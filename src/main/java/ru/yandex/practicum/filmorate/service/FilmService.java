@@ -136,6 +136,10 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getPopularFilm(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilm(count, genreId, year).stream().map(FilmMapper::mapToFilmDto).toList();
+    }
+
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId).stream()
                 .map(FilmMapper::mapToFilmDto)
