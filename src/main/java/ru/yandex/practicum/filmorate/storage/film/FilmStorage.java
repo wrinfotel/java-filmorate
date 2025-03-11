@@ -28,5 +28,7 @@ public interface FilmStorage {
 
     boolean deleteById(long id);
 
+    List<Film> getRecommendations(Long userId);
+
     Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year);
 }

@@ -274,4 +274,36 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getRecommendations(Long userId) {
+        String sqlQuery = "SELECT f.*, " +
+                "(SELECT COUNT(film_id) FROM \"user_films\" uf WHERE uf.film_id = f.id) AS likes_count, " +
+                "mpa.NAME AS mpa_name, mpa.ID AS mpa_id, " +
+                "g.id AS genre_id, g.name AS genre_name, " +
+                "dir.id AS director_id, dir.name AS director_name " +
+                "FROM \"film\" f " +
+                "JOIN (SELECT uf.film_id, SUM(su.common_likes) " +
+                "AS total_similarity FROM \"user_films\" uf " +
+                "JOIN (SELECT uf.user_id, COUNT(*) AS common_likes FROM \"user_films\" uf " +
+                "JOIN (SELECT film_id FROM \"user_films\" WHERE user_id = ?) ulf ON uf.film_id = ulf.film_id " +
+                "WHERE uf.user_id != ? GROUP BY uf.user_id) su ON uf.user_id = su.user_id " +
+                "LEFT JOIN (SELECT film_id FROM \"user_films\" WHERE user_id = ?) ulf " +
+                "ON uf.film_id = ulf.film_id GROUP BY uf.film_id) rf ON f.id = rf.film_id " +
+                "LEFT JOIN \"mpa_rating\" mpa ON f.rating_id = mpa.id " +
+                "LEFT JOIN \"film_genre\" fg ON f.id = fg.film_id " +
+                "LEFT JOIN \"genre\" g ON fg.genre_id = g.id " +
+                "LEFT JOIN \"film_director\" AS fd ON f.ID = fd.FILM_ID " +
+                "LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID " +
+                "WHERE f.id NOT IN (SELECT film_id FROM \"user_films\" WHERE user_id = ?) " +
+                "ORDER BY rf.total_similarity DESC";
+
+        try {
+            return jdbcTemplate.query(sqlQuery, listMapper, userId, userId, userId, userId).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Произошла ошибка при билде", e);
+        }
+    }
 }

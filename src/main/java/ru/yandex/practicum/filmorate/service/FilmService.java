@@ -12,6 +12,9 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
+import ru.yandex.practicum.filmorate.model.feed.Operation;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
@@ -30,6 +33,8 @@ public class FilmService {
 
     private final DirectorService directorService;
 
+    private final FeedStorage feedStorage;
+
     private final Logger log = LoggerFactory.getLogger(FilmService.class);
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
@@ -42,6 +47,7 @@ public class FilmService {
         this.mpaService = mpaService;
         this.genreService = genreService;
         this.directorService = directorService;
+        this.feedStorage = feedStorage;
     }
 
     public Collection<FilmDto> findAll() {
@@ -102,12 +108,19 @@ public class FilmService {
         User user = userService.findById(userId);
         Film film = findById(filmId);
         filmStorage.addLike(film, user);
+        feedStorage.create(user.getId(), EventType.LIKE, Operation.ADD, film.getId());
     }
 
     public void removeLike(Long filmId, Long userId) {
         User user = userService.findById(userId);
         Film film = findById(filmId);
         filmStorage.removeLike(film, user);
+        feedStorage.create(user.getId(), EventType.LIKE, Operation.REMOVE, film.getId());
+    }
+
+    public List<FilmDto> getTopFilms(Integer count) {
+        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(),
+                f1.getLikesCount())).limit(count).toList();
     }
 
     public void deleteById(Long filmId) {
@@ -132,4 +145,9 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getRecommendations(Long userId) {
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
 }
