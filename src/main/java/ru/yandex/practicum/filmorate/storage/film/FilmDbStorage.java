@@ -92,6 +92,8 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
 
         if (film.getGenres() != null) {
+            List<Genre> withoutDublicates = film.getGenres().stream().distinct().toList();
+            film.setGenres(withoutDublicates);
             String queryForGenres = "INSERT INTO \"film_genre\" (film_id, genre_id) VALUES (?, ?)";
             jdbcTemplate.batchUpdate(queryForGenres, film.getGenres(), film.getGenres().size(),
                     (PreparedStatement ps, Genre genre) -> {
@@ -101,6 +103,8 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         if (film.getDirectors() != null) {
+            List<Director> directors = film.getDirectors().stream().distinct().toList();
+            film.setDirectors(directors);
             String queryForDirectors = "INSERT INTO \"film_director\" (film_id, director_id) VALUES (?, ?)";
             jdbcTemplate.batchUpdate(queryForDirectors, film.getDirectors(), film.getDirectors().size(),
                     (PreparedStatement ps, Director director) -> {
@@ -115,7 +119,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film newFilm) {
         String sqlQuery = "UPDATE \"film\" SET " +
-                "name = ?, description = ?, release_date = ?, duration = ? " +
+                "name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? " +
                 "where id = ?";
 
         jdbcTemplate.update(sqlQuery,
@@ -123,12 +127,15 @@ public class FilmDbStorage implements FilmStorage {
                 newFilm.getDescription(),
                 newFilm.getReleaseDate(),
                 newFilm.getDuration(),
+                newFilm.getMpa().getId(),
                 newFilm.getId());
 
         String sqlDeleteGenreQuery = "DELETE FROM \"film_genre\" WHERE film_id = ?";
         jdbcTemplate.update(sqlDeleteGenreQuery, newFilm.getId());
 
         if (newFilm.getGenres() != null) {
+            List<Genre> genres = newFilm.getGenres().stream().distinct().toList();
+            newFilm.setGenres(genres);
             String queryForGenres = "INSERT INTO \"film_genre\" (film_id, genre_id) VALUES (?, ?)";
             jdbcTemplate.batchUpdate(queryForGenres, newFilm.getGenres(), newFilm.getGenres().size(),
                     (PreparedStatement ps, Genre genre) -> {
@@ -141,6 +148,8 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlDeleteGenreQueryDirector, newFilm.getId());
 
         if (newFilm.getDirectors() != null) {
+            List<Director> directors = newFilm.getDirectors().stream().distinct().toList();
+            newFilm.setDirectors(directors);
             String queryForDirectors = "INSERT INTO \"film_director\" (film_id, director_id) VALUES (?, ?)";
             jdbcTemplate.batchUpdate(queryForDirectors, newFilm.getDirectors(), newFilm.getDirectors().size(),
                     (PreparedStatement ps, Director director) -> {
@@ -173,7 +182,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> findFilmsByDirector(Director director, String sortField) {
-        String orderBy = sortField.equals("year") ? "YEAR(fi.release_date)" : "likes_count";
+        String orderBy = sortField.equals("year") ? "YEAR(fi.release_date) ASC" : "likes_count DESC";
         String sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
                 " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
                 " dir.id AS director_id, dir.name AS director_name" +
@@ -182,7 +191,7 @@ public class FilmDbStorage implements FilmStorage {
                 " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
                 " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
                 " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
-                " WHERE director_id = ? ORDER BY " + orderBy + " DESC";
+                " WHERE director_id = ? ORDER BY " + orderBy;
 
         return jdbcTemplate.query(sqlQuery, listMapper, director.getId()).getFirst();
     }
@@ -191,6 +200,62 @@ public class FilmDbStorage implements FilmStorage {
     public boolean deleteById(long id) {
         String sqlQuery = "DELETE FROM \"film\" WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    @Override
+    public Collection<Film> getPopularFilm(Integer genreId, Integer year) {
+        String sqlQuery;
+        if (genreId == 0 && year == 0) {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " ORDER BY likes_count DESC";
+        }  else if (genreId != 0 && year == 0) {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE fi.id IN (SELECT f.id FROM \"film\" AS f LEFT JOIN \"film_genre\" AS fgen" +
+                    " ON f.id = fgen.film_id WHERE fgen.genre_id = " + genreId + ") " +
+                    " ORDER BY likes_count DESC";
+        } else if (genreId == 0) {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year + " " +
+                    " ORDER BY likes_count DESC";
+        } else {
+            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
+                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
+                    " dir.id AS director_id, dir.name AS director_name" +
+                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
+                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
+                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
+                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
+                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
+                    " WHERE fi.id IN (SELECT f.id FROM \"film\" AS f LEFT JOIN \"film_genre\" AS fgen" +
+                    "  ON f.id = fgen.film_id WHERE fgen.genre_id = " + genreId + ") AND " +
+                    "EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year + " ORDER BY likes_count DESC";
+        }
+        try {
+            return jdbcTemplate.query(sqlQuery, listMapper).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        }
     }
 
     @Override
@@ -239,65 +304,6 @@ public class FilmDbStorage implements FilmStorage {
                     ") LIKE LOWER('%").append(query).append("%')");
         }
         return searchQuery.toString();
-    }
-
-    @Override
-    public Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year) {
-        String sqlQuery;
-        if (genreId == 0 && year == 0) {
-            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
-                    " dir.id AS director_id, dir.name AS director_name" +
-                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
-                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
-                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
-                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
-                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
-                    " ORDER BY likes_count DESC " +
-                    " LIMIT ?";
-        }  else if (genreId != 0 && year == 0) {
-            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
-                    " dir.id AS director_id, dir.name AS director_name" +
-                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
-                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
-                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
-                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
-                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
-                    " WHERE gen.id = " + genreId + " " +
-                    " ORDER BY likes_count DESC" +
-                    " LIMIT ?";
-        } else if (genreId == 0 && year != 0) {
-            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
-                    " dir.id AS director_id, dir.name AS director_name" +
-                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
-                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
-                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
-                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
-                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
-                    " WHERE EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year + " " +
-                    " ORDER BY likes_count DESC " +
-                    " LIMIT ?";
-        } else {
-            sqlQuery = "SELECT fi.*, (SELECT COUNT(film_id) FROM \"user_films\" WHERE film_id = fi.id)" +
-                    " AS likes_count, mpa.name AS mpa_name, mpa.id AS mpa_id, gen.name AS genre_name, gen.id AS genre_id," +
-                    " dir.id AS director_id, dir.name AS director_name" +
-                    " FROM \"film\" AS fi LEFT JOIN \"film_genre\" AS fg ON fi.ID = fg.FILM_ID" +
-                    " LEFT JOIN \"genre\" AS gen ON fg.GENRE_ID = gen.ID" +
-                    " LEFT JOIN \"film_director\" AS fd ON fi.ID = fd.FILM_ID" +
-                    " LEFT JOIN \"director\" AS dir ON fd.DIRECTOR_ID = dir.ID" +
-                    " LEFT JOIN \"mpa_rating\" AS mpa ON fi.RATING_ID = mpa.id" +
-                    " WHERE gen.id = " + genreId + " AND EXTRACT (YEAR FROM CAST (fi.release_date AS date)) = " + year
-                    + " " +
-                    " ORDER BY likes_count DESC " +
-                    " LIMIT ?";
-        }
-        try {
-            return jdbcTemplate.query(sqlQuery, listMapper, count).getFirst();
-        } catch (NoSuchElementException e) {
-            return Collections.emptyList();
-        }
     }
 
     @Override

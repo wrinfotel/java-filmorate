@@ -16,8 +16,14 @@ public class FilmMapper {
         if (newFilm.getReleaseDate() != null) {
             oldFilm.setReleaseDate(newFilm.getReleaseDate());
         }
-        if (newFilm.getDirectors() != null) {
-            oldFilm.setDirectors(newFilm.getDirectors());
+
+        oldFilm.setDirectors(newFilm.getDirectors());
+
+        if(newFilm.getMpa() != null) {
+            oldFilm.setMpa(newFilm.getMpa());
+        }
+        if(newFilm.getGenres() != null) {
+            oldFilm.setGenres(newFilm.getGenres());
         }
         oldFilm.setDuration(newFilm.getDuration());
         return oldFilm;
