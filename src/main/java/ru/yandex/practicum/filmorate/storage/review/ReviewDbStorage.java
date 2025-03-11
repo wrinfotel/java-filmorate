@@ -154,7 +154,7 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public List<Review> getAllReviews(int count) {
         final String GET_ALL = """
-            SELECT r.id, r.content, r.is_positive, r.user_id, r.film_id, likes.lik, dislikes.dis
+            SELECT r.id, r.content, r.is_positive, r.user_id, r.film_id, likes.lik AS likes, dislikes.dis AS dislikes
             FROM PUBLIC."reviews" r
             LEFT JOIN (SELECT review_id, COUNT(*) AS lik FROM PUBLIC."useful" WHERE is_like = TRUE
             GROUP BY review_id) likes

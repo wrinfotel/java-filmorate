@@ -119,13 +119,8 @@ public class FilmService {
         feedStorage.create(user.getId(), EventType.LIKE, Operation.REMOVE, film.getId());
     }
 
-    public List<FilmDto> getTopFilms(Integer count) {
-        return findAll().stream().sorted((f1, f2) -> Long.compare(f2.getLikesCount(),
-                f1.getLikesCount())).limit(count).toList();
-    }
-
     public void deleteById(Long filmId) {
-        Film film = findById(filmId);
+        findById(filmId);
         filmStorage.deleteById(filmId);
     }
 
@@ -137,7 +132,9 @@ public class FilmService {
     }
 
     public List<FilmDto> getPopularFilm(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getPopularFilm(count, genreId, year).stream().map(FilmMapper::mapToFilmDto).toList();
+        return filmStorage.getPopularFilm(genreId, year).stream().map(FilmMapper::mapToFilmDto)
+                .limit(count)
+                .toList();
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
@@ -145,6 +142,13 @@ public class FilmService {
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
+
+    public List<FilmDto> search(String query, String searchBy) {
+        return filmStorage.search(query, searchBy).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
 
     public List<FilmDto> getRecommendations(Long userId) {
         return filmStorage.getRecommendations(userId).stream()

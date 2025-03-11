@@ -28,7 +28,9 @@ public interface FilmStorage {
 
     boolean deleteById(long id);
 
+    Collection<Film> getPopularFilm(Integer genreId, Integer year);
+
     List<Film> getRecommendations(Long userId);
 
-    Collection<Film> getPopularFilm(Integer count, Integer genreId, Integer year);
+    List<Film> search(String query, String searchBy);
 }

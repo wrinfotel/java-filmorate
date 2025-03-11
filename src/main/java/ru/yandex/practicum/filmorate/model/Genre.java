@@ -19,4 +19,9 @@ public class Genre {
         Genre genre = (Genre) object;
         return Objects.equals(id, genre.id);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
