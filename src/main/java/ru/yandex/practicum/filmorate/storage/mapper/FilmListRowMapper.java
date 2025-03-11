@@ -16,7 +16,7 @@ public class FilmListRowMapper implements RowMapper<List<Film>> {
 
     @Override
     public List<Film> mapRow(ResultSet rs, int rowNum) throws SQLException {
-        Map<Long, Film> filmsMap = new HashMap<>();
+        Map<Long, Film> filmsMap = new LinkedHashMap<>();
         do {
             Long filmId = rs.getLong("id");
             Film film = filmsMap.get(filmId);

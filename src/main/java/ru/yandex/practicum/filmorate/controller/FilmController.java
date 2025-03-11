@@ -46,11 +46,6 @@ public class FilmController {
         filmService.deleteById(id);
     }
 
-    @GetMapping("/popular")
-    public List<FilmDto> getPopularFilm(@RequestParam(defaultValue = "10", required = false) Integer count) {
-        return filmService.getTopFilms(count);
-    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@Valid @RequestBody Film film) {
@@ -77,5 +72,12 @@ public class FilmController {
     public List<FilmDto> search(@RequestParam String query,
                                 @RequestParam(defaultValue = "title", required = false) String by) {
         return filmService.search(query, by);
+    }
+
+    @GetMapping("/popular")
+    public List<FilmDto> getPopularFilm(@RequestParam(defaultValue = "100", required = false) Integer count,
+                                        @RequestParam(defaultValue = "0", required = false) Integer genreId,
+                                        @RequestParam(defaultValue = "0", required = false) Integer year) {
+        return filmService.getPopularFilm(count, genreId, year);
     }
 }
