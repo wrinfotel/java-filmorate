@@ -38,7 +38,7 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review createReview(Review review) {
         final String ADD_REVIEW_QUERY = """
-            INSERT INTO PUBLIC."reviews" (content, is_positive, user_id, film_id)
+            INSERT INTO "reviews" (content, is_positive, user_id, film_id)
             VALUES (?, ?, ?, ?)
             """;
 
@@ -66,7 +66,7 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review updateReview(Review review) {
         final String UPDATE_REVIEW_QUERY = """
-            UPDATE PUBLIC."reviews" SET content = ?, is_positive = ?
+            UPDATE "reviews" SET content = ?, is_positive = ?
             WHERE id = ?
             """;
 
@@ -86,10 +86,10 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public void deleteReview(Long id) {
         final String DELETE_REVIEW_QUERY = """
-            DELETE FROM PUBLIC."reviews" WHERE id = ?
+            DELETE FROM "reviews" WHERE id = ?
             """;
         final String DELETE_USEFUL_QUERY = """
-            DELETE FROM PUBLIC."useful" WHERE review_id = ?
+            DELETE FROM "useful" WHERE review_id = ?
             """;
         jdbcTemplate.update(DELETE_USEFUL_QUERY, id);
         jdbcTemplate.update(DELETE_REVIEW_QUERY, id);
@@ -103,10 +103,10 @@ public class ReviewDbStorage implements ReviewStorage {
                r.user_id, r.film_id,
                COALESCE(SUM(CASE WHEN uf.is_like IS TRUE THEN 1 ELSE 0 END), 0) AS likes,
                COALESCE(SUM(CASE WHEN uf.is_like IS FALSE THEN 1 ELSE 0 END), 0) AS dislikes
-            FROM PUBLIC."reviews" r
-            JOIN PUBLIC."user" u ON r.user_id = u.id
-            JOIN PUBLIC."film" f ON r.film_id = f.id
-            LEFT JOIN PUBLIC."useful" uf ON r.id = uf.review_id
+            FROM "reviews" r
+            JOIN "user" u ON r.user_id = u.id
+            JOIN "film" f ON r.film_id = f.id
+            LEFT JOIN "useful" uf ON r.id = uf.review_id
             WHERE r.id = ?
             GROUP BY r.id, r.content, r.is_positive, u.name, f.name, r.user_id, r.film_id;
             """;
@@ -124,20 +124,20 @@ public class ReviewDbStorage implements ReviewStorage {
             SELECT r.id, r.content, r.is_positive, r.user_id, r.film_id,
                     COALESCE(likes.lik, 0) AS likes,
                     COALESCE(dislikes.dis, 0) AS dislikes
-            FROM PUBLIC."reviews" r
+            FROM "reviews" r
             LEFT JOIN (
                     SELECT review_id, COUNT(*) AS lik
-                    FROM PUBLIC."useful"
+                    FROM "useful"
                     WHERE is_like = TRUE
                     GROUP BY review_id
             ) likes ON likes.review_id = r.id
                 LEFT JOIN (
                     SELECT review_id, COUNT(*) AS dis
-                    FROM PUBLIC."useful"
+                    FROM "useful"
                     WHERE is_like = FALSE
                     GROUP BY review_id
                 ) dislikes ON dislikes.review_id = r.id
-                JOIN PUBLIC."film" f ON r.film_id = f.id
+                JOIN "film" f ON r.film_id = f.id
                 WHERE r.film_id = ?
                 ORDER BY (COALESCE(likes.lik, 0) - COALESCE(dislikes.dis, 0)) DESC
                 LIMIT ?
@@ -155,11 +155,11 @@ public class ReviewDbStorage implements ReviewStorage {
     public List<Review> getAllReviews(int count) {
         final String GET_ALL = """
             SELECT r.id, r.content, r.is_positive, r.user_id, r.film_id, likes.lik AS likes, dislikes.dis AS dislikes
-            FROM PUBLIC."reviews" r
-            LEFT JOIN (SELECT review_id, COUNT(*) AS lik FROM PUBLIC."useful" WHERE is_like = TRUE
+            FROM "reviews" r
+            LEFT JOIN (SELECT review_id, COUNT(*) AS lik FROM "useful" WHERE is_like = TRUE
             GROUP BY review_id) likes
             ON likes.review_id = r.id
-            LEFT JOIN (SELECT review_id, COUNT(*) AS dis FROM PUBLIC."useful" WHERE is_like = FALSE
+            LEFT JOIN (SELECT review_id, COUNT(*) AS dis FROM "useful" WHERE is_like = FALSE
             GROUP BY review_id) dislikes
             ON dislikes.review_id = r.id
             ORDER BY (COALESCE(likes.lik, 0) - COALESCE(dislikes.dis, 0)) DESC
@@ -174,18 +174,18 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public void likeOrDislikeToReview(Long reviewId, Long userId, boolean isLike) {
         String checkSql = """
-            SELECT * FROM PUBLIC."useful" WHERE review_id = ? AND user_id = ?
+            SELECT * FROM "useful" WHERE review_id = ? AND user_id = ?
             """;
         List<Map<String, Object>> likeDislike = jdbcTemplate.queryForList(checkSql, reviewId, userId);
 
         if (!likeDislike.isEmpty()) {
             String updateSql = """
-                UPDATE PUBLIC."useful" SET is_like = ? WHERE review_id = ? AND user_id = ?
+                UPDATE "useful" SET is_like = ? WHERE review_id = ? AND user_id = ?
                 """;
             jdbcTemplate.update(updateSql, isLike, reviewId, userId);
         } else {
             String insertSql = """
-                INSERT INTO PUBLIC."useful" (review_id, is_like, user_id) VALUES (?, ?, ?)
+                INSERT INTO "useful" (review_id, is_like, user_id) VALUES (?, ?, ?)
                 """;
             jdbcTemplate.update(insertSql, reviewId, isLike, userId);
         }
@@ -195,7 +195,7 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public void deleteLikeOrDislike(Long reviewId, Long userId, boolean isLike) {
         final String DELETE_LIKE_OR_DISLIKE = """
-            DELETE FROM PUBLIC."useful" WHERE review_id = ? AND user_id = ?
+            DELETE FROM "useful" WHERE review_id = ? AND user_id = ?
             """;
         String action = isLike ? "Like" : "dislike";
         jdbcTemplate.update(DELETE_LIKE_OR_DISLIKE, reviewId, userId);

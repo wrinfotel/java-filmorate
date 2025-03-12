@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 
@@ -41,8 +40,7 @@ public class DirectorService {
         }
         Director oldDirector = directorStorage.findById(newDirector.getId())
                 .orElseThrow(() -> new NotFoundException("Режиссер с id = " + newDirector.getId() + " не найден"));
-        Director updatedDirector = directorStorage.update(DirectorMapper
-                .updateDirectorFields(oldDirector, newDirector));
+        Director updatedDirector = directorStorage.update(updateDirectorFields(oldDirector, newDirector));
         log.info("Updated director with id " + updatedDirector.getId());
         return updatedDirector;
     }
@@ -50,5 +48,12 @@ public class DirectorService {
     public void delete(Long id) {
         Director director = findById(id);
         directorStorage.delete(director);
+    }
+
+    private Director updateDirectorFields(Director oldDirector, Director newDirector) {
+        if (newDirector.getName() != null && !newDirector.getName().isBlank()) {
+            oldDirector.setName(newDirector.getName());
+        }
+        return oldDirector;
     }
 }

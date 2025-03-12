@@ -8,12 +8,6 @@ import ru.yandex.practicum.filmorate.model.Review;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReviewMapper {
 
-    public static Review updateReviewFields(Review oldReview, Review newReview) {
-        oldReview.setContent(newReview.getContent());
-        oldReview.setIsPositive(newReview.getIsPositive());
-        return oldReview;
-    }
-
     public static ReviewDto mapToReviewDto(Review review) {
         ReviewDto dto = new ReviewDto();
         dto.setReviewId(review.getReviewId());

@@ -100,7 +100,7 @@ public class FilmService {
         Film oldFilm = filmStorage.findById(newFilm.getId())
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
         checkGenres(newFilm.getGenres());
-        Film updatedFilm = filmStorage.update(FilmMapper.updateFilmFields(oldFilm, newFilm));
+        Film updatedFilm = filmStorage.update(updateFilmFields(oldFilm, newFilm));
         log.info("Film updated " + updatedFilm.getId());
         return FilmMapper.mapToFilmDto(updatedFilm);
     }
@@ -154,5 +154,26 @@ public class FilmService {
         return filmStorage.getRecommendations(userId).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    private Film updateFilmFields(Film oldFilm, Film newFilm) {
+        oldFilm.setName(newFilm.getName());
+        if (!newFilm.getDescription().isBlank()) {
+            oldFilm.setDescription(newFilm.getDescription());
+        }
+        if (newFilm.getReleaseDate() != null) {
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+        }
+
+        oldFilm.setDirectors(newFilm.getDirectors());
+
+        if (newFilm.getMpa() != null) {
+            oldFilm.setMpa(newFilm.getMpa());
+        }
+        if (newFilm.getGenres() != null) {
+            oldFilm.setGenres(newFilm.getGenres());
+        }
+        oldFilm.setDuration(newFilm.getDuration());
+        return oldFilm;
     }
 }

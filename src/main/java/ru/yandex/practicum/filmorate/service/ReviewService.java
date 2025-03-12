@@ -45,7 +45,7 @@ public class ReviewService {
         Review oldReview = reviewStorage.getReviewById(newReview.getReviewId())
                 .orElseThrow(() -> new NotFoundException("Review with id = " + newReview.getReviewId() + "was not found"));
 
-        Review updatedReview = reviewStorage.updateReview(ReviewMapper.updateReviewFields(oldReview, newReview));
+        Review updatedReview = reviewStorage.updateReview(updateReviewFields(oldReview, newReview));
         feedStorage.create(updatedReview.getUserId(), EventType.REVIEW, Operation.UPDATE, updatedReview.getReviewId());
 
         return ReviewMapper.mapToReviewDto(updatedReview);
@@ -104,5 +104,11 @@ public class ReviewService {
 
     public void deleteDislike(Long reviewId, Long userId) {
         reviewStorage.deleteLikeOrDislike(reviewId, userId, false);
+    }
+
+    private Review updateReviewFields(Review oldReview, Review newReview) {
+        oldReview.setContent(newReview.getContent());
+        oldReview.setIsPositive(newReview.getIsPositive());
+        return oldReview;
     }
 }

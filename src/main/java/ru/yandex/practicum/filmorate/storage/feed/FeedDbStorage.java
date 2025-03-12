@@ -37,7 +37,7 @@ public class FeedDbStorage implements FeedStorage {
     public Feed getById(Long id) {
         String getById = """
             SELECT *
-            FROM PUBLIC."feed" WHERE id = ?
+            FROM "feed" WHERE id = ?
             """;
         try {
             return jdbcTemplate.queryForObject(getById, feedRowMapper, id);
@@ -54,7 +54,7 @@ public class FeedDbStorage implements FeedStorage {
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         String createFeed = """
-            INSERT INTO PUBLIC."feed"(entity_id, user_id, time_stamp, event_type, operation)
+            INSERT INTO "feed"(entity_id, user_id, time_stamp, event_type, operation)
             VALUES (?, ?, ?, ?, ?)
             """;
 
@@ -82,7 +82,7 @@ public class FeedDbStorage implements FeedStorage {
     public List<Feed> getUserFeed(Long userId) {
         String getUserFeed = """
                 SELECT *
-                FROM PUBLIC."feed" WHERE user_id = ?
+                FROM "feed" WHERE user_id = ?
                 ORDER BY time_stamp
                 """;
 

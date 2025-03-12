@@ -63,7 +63,7 @@ public class UserService {
         }
         User oldUser = userStorage.findById(newUser.getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден"));
-        User updatedUser = userStorage.update(UserMapper.updateUserFields(oldUser, newUser));
+        User updatedUser = userStorage.update(updateUserFields(oldUser, newUser));
         log.info("Updated user with id " + updatedUser.getId());
         return UserMapper.mapToUserDto(updatedUser);
     }
@@ -102,7 +102,7 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-        User user = findById(userId);
+        findById(userId);
         userStorage.deleteById(userId);
     }
 
@@ -122,5 +122,23 @@ public class UserService {
     public List<Feed> getUserFeed(Long id) {
         findById(id);
         return feedStorage.getUserFeed(id);
+    }
+
+    private User updateUserFields(User oldUser, User newUser) {
+        if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
+            oldUser.setLogin(newUser.getLogin());
+        }
+        if (newUser.getName() != null && !newUser.getName().isBlank()) {
+            oldUser.setName(newUser.getName());
+        } else {
+            oldUser.setName(newUser.getLogin());
+        }
+        if (newUser.getBirthday() != null) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
+        return oldUser;
     }
 }

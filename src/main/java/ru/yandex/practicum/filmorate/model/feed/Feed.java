@@ -6,15 +6,15 @@ import lombok.Data;
 @Data
 @Builder
 public class Feed {
-    Long timestamp;
+    private Long timestamp;
 
-    Long userId;
+    private Long userId;
 
-    EventType eventType;
+    private EventType eventType;
 
-    Operation operation;
+    private Operation operation;
 
-    Long eventId;
+    private Long eventId;
 
-    Long entityId;
+    private Long entityId;
 }
