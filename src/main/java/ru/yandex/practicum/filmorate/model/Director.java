@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,21 +9,18 @@ import java.util.Objects;
 
 @Data
 @Builder
-public class Genre {
+public class Director {
     private Long id;
-    private String name;
 
+    @NotNull
+    @NotBlank
+    private String name;
 
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
-        Genre genre = (Genre) object;
-        return Objects.equals(id, genre.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+        Director director = (Director) object;
+        return Objects.equals(id, director.id);
     }
 }

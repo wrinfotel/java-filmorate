@@ -1,13 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
@@ -54,9 +52,26 @@ public class InMemoryFilmStorage implements FilmStorage {
     public boolean removeLike(Film film, User user) {
         if (film.getLikesCount() > 0) {
             film.removeLike();
-
         }
         return true;
+    }
+
+    @Override
+    public Collection<Film> findFilmsByDirector(Director director, String sortField) {
+        return List.of();
+    }
+
+    @Override
+    public boolean deleteById(long id) {
+        if (films.get(id) != null) {
+            films.remove(id);
+        }
+        return true;
+    }
+
+    @Override
+    public List<Film> search(String query, String searchBy) {
+        return List.of();
     }
 
     private long getNextId() {
@@ -66,5 +81,20 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Collection<Film> getPopularFilm(Integer genreId, Integer year) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<Film> getRecommendations(Long userId) {
+        return null;
     }
 }

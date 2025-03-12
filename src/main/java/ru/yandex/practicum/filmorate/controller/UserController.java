@@ -5,9 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.Feed;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
@@ -20,6 +23,8 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+
+    private final FilmService filmService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -45,6 +50,12 @@ public class UserController {
         userService.deleteFriend(id, friendId);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteUserById(@PathVariable Long id) {
+        userService.deleteUserById(id);
+    }
+
     @GetMapping("/{id}/friends")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> getUserFriends(@PathVariable Long id) {
@@ -67,5 +78,17 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public UserDto update(@Valid @RequestBody User newUser) {
         return userService.update(newUser);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
+        return filmService.getRecommendations(id);
+    }
+
+    @GetMapping("/{id}/feed")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Feed> getFeed(@PathVariable Long id) {
+        return userService.getUserFeed(id);
     }
 }

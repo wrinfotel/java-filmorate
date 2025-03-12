@@ -8,14 +8,17 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
+import ru.yandex.practicum.filmorate.model.feed.Operation;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FilmService {
@@ -28,16 +31,24 @@ public class FilmService {
 
     private final GenreService genreService;
 
+    private final DirectorService directorService;
+
+    private final FeedStorage feedStorage;
+
     private final Logger log = LoggerFactory.getLogger(FilmService.class);
 
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        UserService userService,
                        MpaService mpaService,
-                       GenreService genreService) {
+                       GenreService genreService,
+                       DirectorService directorService,
+                       FeedStorage feedStorage) {
         this.filmStorage = filmStorage;
         this.userService = userService;
         this.mpaService = mpaService;
         this.genreService = genreService;
+        this.directorService = directorService;
+        this.feedStorage = feedStorage;
     }
 
     public Collection<FilmDto> findAll() {
@@ -89,7 +100,7 @@ public class FilmService {
         Film oldFilm = filmStorage.findById(newFilm.getId())
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден"));
         checkGenres(newFilm.getGenres());
-        Film updatedFilm = filmStorage.update(FilmMapper.updateFilmFields(oldFilm, newFilm));
+        Film updatedFilm = filmStorage.update(updateFilmFields(oldFilm, newFilm));
         log.info("Film updated " + updatedFilm.getId());
         return FilmMapper.mapToFilmDto(updatedFilm);
     }
@@ -98,17 +109,71 @@ public class FilmService {
         User user = userService.findById(userId);
         Film film = findById(filmId);
         filmStorage.addLike(film, user);
+        feedStorage.create(user.getId(), EventType.LIKE, Operation.ADD, film.getId());
     }
 
     public void removeLike(Long filmId, Long userId) {
         User user = userService.findById(userId);
         Film film = findById(filmId);
         filmStorage.removeLike(film, user);
+        feedStorage.create(user.getId(), EventType.LIKE, Operation.REMOVE, film.getId());
     }
 
-    public List<FilmDto> getTopFilms(Integer count) {
-        return findAll().stream()
-                .sorted((f1, f2) -> Long.compare(f2.getLikesCount(), f1.getLikesCount()))
-                .limit(count).toList();
+    public void deleteById(Long filmId) {
+        findById(filmId);
+        filmStorage.deleteById(filmId);
+    }
+
+    public Collection<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
+        Director director = directorService.findById(directorId);
+        return filmStorage.findFilmsByDirector(director, sortBy).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getPopularFilm(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilm(genreId, year).stream().map(FilmMapper::mapToFilmDto)
+                .limit(count)
+                .toList();
+    }
+
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> search(String query, String searchBy) {
+        return filmStorage.search(query, searchBy).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    private Film updateFilmFields(Film oldFilm, Film newFilm) {
+        oldFilm.setName(newFilm.getName());
+        if (!newFilm.getDescription().isBlank()) {
+            oldFilm.setDescription(newFilm.getDescription());
+        }
+        if (newFilm.getReleaseDate() != null) {
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+        }
+
+        oldFilm.setDirectors(newFilm.getDirectors());
+
+        if (newFilm.getMpa() != null) {
+            oldFilm.setMpa(newFilm.getMpa());
+        }
+        if (newFilm.getGenres() != null) {
+            oldFilm.setGenres(newFilm.getGenres());
+        }
+        oldFilm.setDuration(newFilm.getDuration());
+        return oldFilm;
     }
 }

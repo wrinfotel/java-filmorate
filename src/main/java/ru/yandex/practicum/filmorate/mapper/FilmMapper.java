@@ -8,18 +8,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
 
-    public static Film updateFilmFields(Film oldFilm, Film newFilm) {
-        oldFilm.setName(newFilm.getName());
-        if (!newFilm.getDescription().isBlank()) {
-            oldFilm.setDescription(newFilm.getDescription());
-        }
-        if (newFilm.getReleaseDate() != null) {
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-        }
-        oldFilm.setDuration(newFilm.getDuration());
-        return oldFilm;
-    }
-
     public static FilmDto mapToFilmDto(Film film) {
         FilmDto dto = new FilmDto();
         dto.setId(film.getId());
@@ -30,6 +18,7 @@ public class FilmMapper {
         dto.setLikesCount(film.getLikesCount());
         dto.setMpa(film.getMpa());
         dto.setGenres(film.getGenres());
+        dto.setDirectors(film.getDirectors());
         return dto;
     }
 }

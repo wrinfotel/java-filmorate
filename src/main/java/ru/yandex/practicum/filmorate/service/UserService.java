@@ -9,6 +9,10 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
+import ru.yandex.practicum.filmorate.model.feed.Feed;
+import ru.yandex.practicum.filmorate.model.feed.Operation;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
@@ -22,8 +26,11 @@ public class UserService {
 
     private final UserStorage userStorage;
 
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+    private final FeedStorage feedStorage;
+
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage, FeedStorage feedStorage) {
         this.userStorage = userStorage;
+        this.feedStorage = feedStorage;
     }
 
     public Collection<UserDto> findAll() {
@@ -56,7 +63,7 @@ public class UserService {
         }
         User oldUser = userStorage.findById(newUser.getId())
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден"));
-        User updatedUser = userStorage.update(UserMapper.updateUserFields(oldUser, newUser));
+        User updatedUser = userStorage.update(updateUserFields(oldUser, newUser));
         log.info("Updated user with id " + updatedUser.getId());
         return UserMapper.mapToUserDto(updatedUser);
     }
@@ -69,7 +76,7 @@ public class UserService {
         if (!checkFriendship) {
             boolean checkResult = checkAndAcceptFriendship(friend, user);
             userStorage.addFriend(user, friend, checkResult);
-
+            feedStorage.create(userId, EventType.FRIEND, Operation.ADD, friendId);
         }
     }
 
@@ -91,6 +98,12 @@ public class UserService {
         User friend = findById(friendId);
         userStorage.removeFriend(user, friend);
         changeFriendshipStatus(friend, user, false);
+        feedStorage.create(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+    }
+
+    public void deleteUserById(long userId) {
+        findById(userId);
+        userStorage.deleteById(userId);
     }
 
     public List<UserDto> commonFriends(long userId, long friendId) {
@@ -104,5 +117,28 @@ public class UserService {
     public List<UserDto> userFriends(long userId) {
         User user = findById(userId);
         return userStorage.getFriends(user).stream().map(UserMapper::mapToUserDto).toList();
+    }
+
+    public List<Feed> getUserFeed(Long id) {
+        findById(id);
+        return feedStorage.getUserFeed(id);
+    }
+
+    private User updateUserFields(User oldUser, User newUser) {
+        if (newUser.getEmail() != null && !newUser.getEmail().isBlank()) {
+            oldUser.setEmail(newUser.getEmail());
+        }
+        if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
+            oldUser.setLogin(newUser.getLogin());
+        }
+        if (newUser.getName() != null && !newUser.getName().isBlank()) {
+            oldUser.setName(newUser.getName());
+        } else {
+            oldUser.setName(newUser.getLogin());
+        }
+        if (newUser.getBirthday() != null) {
+            oldUser.setBirthday(newUser.getBirthday());
+        }
+        return oldUser;
     }
 }
